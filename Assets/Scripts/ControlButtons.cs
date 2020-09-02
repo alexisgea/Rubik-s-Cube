@@ -49,6 +49,8 @@ public class ControlButtons : MonoBehaviour
         else {
             _rCube.transform.rotation = Quaternion.Lerp(_rCube.transform.rotation, _startRCubeRotation, _cubeRotationResetSpeed * Time.deltaTime);
         }
+
+        // if(Input.Key)
     }
 
 
@@ -83,19 +85,19 @@ public class ControlButtons : MonoBehaviour
     }
 
     public void TurnUp() {
-        
+        _rCube.RotateFace(Face.CubeVertical, prime:true);
     }
 
     public void TurnDown() {
-
+        _rCube.RotateFace(Face.CubeVertical, prime:false);
     }
 
     public void TurnRight() {
-        _rCube.SmallCubeGroup.Rotate(Vector3.down, 90);
+        _rCube.RotateFace(Face.CubeHorizontal, prime:false);
     }
 
     public void TurnLeft() {
-        _rCube.SmallCubeGroup.Rotate(Vector3.up, 90);
+        _rCube.RotateFace(Face.CubeHorizontal, prime:true);
     }
 
 

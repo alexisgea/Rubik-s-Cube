@@ -14,9 +14,11 @@ using UnityEngine;
 // add ring highlights on button
 // add mouse movements with ring highlights
 // add controller support with vibration
+// add press space to start timer
+// add gold star for current record and grey start for past record
 
 
-public enum Face {Up, Down, Right, Left, Front, Back, Horizontal, Vertical, Parallel}
+public enum Face {Up, Down, Right, Left, Front, Back, Horizontal, Vertical, Parallel, CubeHorizontal, CubeVertical}
 public struct FaceMove {
     public Face Face;
     public bool Prime;
@@ -53,6 +55,12 @@ public struct FaceMove {
 
             case Face.Parallel:
                 return this.Prime ? "P'" : "P";
+
+            case Face.CubeHorizontal:
+                return this.Prime ? "CL" : "CR";
+            
+            case Face.CubeVertical:
+                return this.Prime ? "CD" : "CU";
             
             default:
                 return "";
@@ -62,9 +70,6 @@ public struct FaceMove {
 
 public class RubiksCube : MonoBehaviour
 {
-    public Transform SmallCubeGroup {get{return _smallCubeGroup;}}
-    [SerializeField] Transform _smallCubeGroup;
-
     private SmallCube[] _allCubes = new SmallCube[27];
 
     private Queue<FaceMove> _plannedMoves = new Queue<FaceMove>();
@@ -114,7 +119,7 @@ public class RubiksCube : MonoBehaviour
 
 
     private void Start() {
-        _allCubes = _smallCubeGroup.GetComponentsInChildren<SmallCube>();
+        _allCubes = GetComponentsInChildren<SmallCube>();
     }
 
     private void Update() {
@@ -229,9 +234,14 @@ public class RubiksCube : MonoBehaviour
                 case Face.Parallel:
                     if(cube.Position.z == 0) faceCubes.Add(cube);
                     break;
+
+                case Face.CubeHorizontal:
+                case Face.CubeVertical:
+                    faceCubes.Add(cube);
+                    break;
             }
 
-            if(faceCubes.Count == 9) break;
+            // if(faceCubes.Count == 9) break;
         }
 
         return faceCubes;
@@ -243,6 +253,7 @@ public class RubiksCube : MonoBehaviour
         {
             case Face.Up:
             case Face.Horizontal:
+            case Face.CubeHorizontal:
                 return rotation.Prime ? Vector3.down : Vector3.up;
             
             case Face.Down:
@@ -250,6 +261,7 @@ public class RubiksCube : MonoBehaviour
             
             case Face.Right:
             case Face.Vertical:
+            case Face.CubeVertical:
                 return rotation.Prime ? Vector3.left : Vector3.right;
             
             case Face.Left:
@@ -257,10 +269,10 @@ public class RubiksCube : MonoBehaviour
 
             case Face.Front:
             case Face.Parallel:
-                return rotation.Prime ? Vector3.back : Vector3.forward;
+                return rotation.Prime ? Vector3.forward : Vector3.back;
             
             case Face.Back:
-                return rotation.Prime ? Vector3.forward : Vector3.back;
+                return rotation.Prime ? Vector3.back : Vector3.forward;
             
             default:
                 return Vector3.zero;
