@@ -79,12 +79,10 @@ public class RubiksCube : MonoBehaviour
 
     private FaceMove _currentMove;
 
-    // private bool _rotating = false;
-    // private Quaternion _targetFaceRotation;
     private float _rotationThreashold = 0.1f;
     private float _rotationLerpOffset = 10f;
 
-    private float _rotationSpeed = 10f; // 250f
+    private float _rotationSpeed = 10f;
     private float _errorMargin = 0.0001f;
 
 
@@ -124,27 +122,6 @@ public class RubiksCube : MonoBehaviour
 
     private void Update() {
 
-        // if(!_rotating && _plannedMoves.Count > 0) {
-        //     var newMove = _plannedMoves.Dequeue();
-
-        //     var rotationAxis = GetRotationAxis(_currentMove);
-        //     var worldAxis = transform.TransformDirection(rotationAxis);
-
-        //     _targetFaceRotation = 
-        //     // would possibly require to reparent child to the center cube, and rotate the center cube and then reset the center cube after deparenting...
-
-        //     _rotating = true;
-
-        //     if(newMove.Hidden && newMove.Log) _shuffleMoves.Push(newMove);
-        //     else if(newMove.Log) _previousMoves.Push(newMove);
-        // }
-
-        // if(_rotating) {
-
-        //     var faceCubes = GetFaceCubes(_currentMove.Face);
-        // }
-
-
         if(_currentMove.Remaining > 0) {
             var faceCubes = GetFaceCubes(_currentMove.Face);
             var rotationAxis = GetRotationAxis(_currentMove);
@@ -152,12 +129,6 @@ public class RubiksCube : MonoBehaviour
 
             var rotation = Mathf.Lerp(0, _currentMove.Remaining + _rotationLerpOffset, _rotationSpeed * Time.deltaTime);
 
-            // var rotation = _rotationSpeed * Time.deltaTime;
-            // if(rotation > _currentMove.Remaining) {
-            //     rotation = _currentMove.Remaining;
-            // }
-            // _currentMove.Remaining -= rotation;
-            
             if(rotation < _rotationThreashold || rotation > _currentMove.Remaining) {
                 rotation = _currentMove.Remaining;
             }
@@ -176,12 +147,6 @@ public class RubiksCube : MonoBehaviour
                 _previousMoves.Clear();
                 _shuffleMoves.Clear();
             }
-            // if(_currentMove.Remaining < _rotationThreashold && IsSolved()) {
-            //     Debug.LogWarning("Solved!");
-            //     _plannedMoves.Clear();
-            //     _previousMoves.Clear();
-            //     _shuffleMoves.Clear();
-            // }
         }
 
         if(_currentMove.Remaining <= 0 && _plannedMoves.Count > 0) {
@@ -240,8 +205,6 @@ public class RubiksCube : MonoBehaviour
                     faceCubes.Add(cube);
                     break;
             }
-
-            // if(faceCubes.Count == 9) break;
         }
 
         return faceCubes;
