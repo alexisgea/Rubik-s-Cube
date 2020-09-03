@@ -279,6 +279,57 @@ public class RubiksCube : MonoBehaviour
         return true;
     }
     
+    private void VirtualFaceRotation(ref int[] face) {
+        var tempFace = face;
+
+        face[0] = tempFace[3];
+        face[1] = tempFace[0];
+        face[2] = tempFace[1];
+        face[5] = tempFace[2];
+        face[8] = tempFace[5];
+        face[7] = tempFace[8];
+        face[6] = tempFace[7];
+        face[3] = tempFace[6];
+    }
+
+    private void VirtualFaceRotationPrime(ref int[] face) {
+        var tempFace = face;
+
+        face[0] = tempFace[1];
+        face[1] = tempFace[2];
+        face[2] = tempFace[5];
+        face[5] = tempFace[8];
+        face[8] = tempFace[7];
+        face[7] = tempFace[6];
+        face[6] = tempFace[3];
+        face[3] = tempFace[0];
+    }
+
+    private void VirtualUp() {
+        VirtualFaceRotation(ref _virtualCube[0]);
+
+        var tempFront = _virtualCube[1];
+        var tempRight = _virtualCube[2];
+        var tempBack = _virtualCube[3];
+        var tempLeft = _virtualCube[4];
+
+        _virtualCube[1][0] = tempFront[1];
+        _virtualCube[1][1] = tempFront[2];
+        _virtualCube[1][2] = tempRight[0];
+
+        _virtualCube[2][0] = tempRight[1];
+        _virtualCube[2][1] = tempRight[2];
+        _virtualCube[2][2] = tempBack[0];
+
+        _virtualCube[2][0] = tempBack[1];
+        _virtualCube[2][1] = tempBack[2];
+        _virtualCube[2][2] = tempLeft[0];
+
+        _virtualCube[3][0] = tempLeft[1];
+        _virtualCube[3][1] = tempLeft[2];
+        _virtualCube[3][2] = tempFront[0];
+    }
+
     // 0-0 0-1 0-2
     // 0-3 0-4 0-5
     // 0-6 0-7 0-8
@@ -290,33 +341,29 @@ public class RubiksCube : MonoBehaviour
     // 5-0 5-1 5-2
     // 5-3 5-4 5-5
     // 5-6 5-7 5-8
-    private void VirtualUp() {
-        var tempUp = _virtualCube[0];
-        _virtualCube[0][0] = tempUp[3];
-        _virtualCube[0][1] = tempUp[0];
-        _virtualCube[0][2] = tempUp[1];
-        _virtualCube[0][5] = tempUp[2];
-        _virtualCube[0][8] = tempUp[5];
-        _virtualCube[0][7] = tempUp[8];
-        _virtualCube[0][6] = tempUp[7];
-        _virtualCube[0][3] = tempUp[6];
+    private void VirtualFront() {
+        VirtualFaceRotation(ref _virtualCube[1]);
 
-        var tempFront = _virtualCube[1];
+        var tempUp = _virtualCube[0];
         var tempRight = _virtualCube[2];
-        var tempBack = _virtualCube[3];
         var tempLeft = _virtualCube[4];
-        _virtualCube[1][0] = tempFront[1];
-        _virtualCube[1][1] = tempFront[2];
-        _virtualCube[1][2] = tempRight[0];
-        _virtualCube[2][0] = tempRight[1];
-        _virtualCube[2][1] = tempRight[2];
-        _virtualCube[2][2] = tempBack[0];
-        _virtualCube[2][0] = tempBack[1];
-        _virtualCube[2][1] = tempBack[2];
-        _virtualCube[2][2] = tempLeft[0];
-        _virtualCube[3][0] = tempLeft[1];
-        _virtualCube[3][1] = tempLeft[2];
-        _virtualCube[3][2] = tempFront[0];
+        var tempDown = _virtualCube[5];
+
+        _virtualCube[5][0] = tempDown[1];
+        _virtualCube[5][1] = tempDown[2];
+        _virtualCube[5][2] = tempRight[6];
+
+        _virtualCube[2][6] = tempRight[3];
+        _virtualCube[2][3] = tempRight[0];
+        _virtualCube[2][0] = tempUp[8];
+
+        _virtualCube[0][8] = tempUp[7];
+        _virtualCube[0][7] = tempUp[6];
+        _virtualCube[0][6] = tempLeft[2];
+
+        _virtualCube[4][2] = tempLeft[5];
+        _virtualCube[4][5] = tempLeft[8];
+        _virtualCube[4][8] = tempDown[0];
     }
 
 }
