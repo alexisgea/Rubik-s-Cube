@@ -70,6 +70,23 @@ public struct FaceMove {
 
 public class RubiksCube : MonoBehaviour
 {
+    //cube face ids
+
+    // 0-0 0-1 0-2
+    // 0-3 0-4 0-5
+    // 0-6 0-7 0-8
+    // 
+    // 1-0 1-1 1-2    2-0 2-1 2-2    3-0 3-1 3-2    4-0 4-1 4-2
+    // 1-3 1-4 1-5    2-3 2-4 2-5    3-3 3-4 3-5    4-3 4-4 4-5
+    // 1-6 1-7 1-8    2-6 2-7 2-8    3-6 3-7 3-8    4-6 4-7 4-8
+    // 
+    // 5-0 5-1 5-2
+    // 5-3 5-4 5-5
+    // 5-6 5-7 5-8
+
+    private enum FaceId {white = 0, green = 1, red = 2, blue = 3, orange = 4, yellow = 5}
+    private int[][] _virtualCube;
+
     private SmallCube[] _allCubes = new SmallCube[27];
 
     private Queue<FaceMove> _plannedMoves = new Queue<FaceMove>();
@@ -117,6 +134,15 @@ public class RubiksCube : MonoBehaviour
 
 
     private void Start() {
+        // initialise cube
+        _virtualCube = new int[6][];
+        for(int i = 0; i < 6; i ++) {
+            _virtualCube[i] = new int[9];
+            for(int j = 0; j < 9; j++) {
+                _virtualCube[i][j] = i;
+            }
+        }
+
         _allCubes = GetComponentsInChildren<SmallCube>();
     }
 
@@ -185,7 +211,7 @@ public class RubiksCube : MonoBehaviour
                     break;
                 
                 case Face.Back:
-                    if(cube.Position.z <= (1 - _errorMargin)) faceCubes.Add(cube);
+                    if(cube.Position.z >= (1 - _errorMargin)) faceCubes.Add(cube);
                     break;
 
                 case Face.Vertical:
@@ -243,13 +269,54 @@ public class RubiksCube : MonoBehaviour
     }
 
     private bool IsSolved() {
-        foreach (var cube in _allCubes)
-        {
-            if(cube.Id != cube.Position) return false;
+        for(int i = 0; i < _virtualCube.Length; i++) {
+            int valCheck = _virtualCube[i][5];
+            for(int j = 0; j < _virtualCube[i].Length; j++) {
+                if(_virtualCube[i][j] != valCheck) return false;
+            }
         }
 
         return true;
     }
-
     
+    // 0-0 0-1 0-2
+    // 0-3 0-4 0-5
+    // 0-6 0-7 0-8
+    // 
+    // 1-0 1-1 1-2    2-0 2-1 2-2    3-0 3-1 3-2    4-0 4-1 4-2
+    // 1-3 1-4 1-5    2-3 2-4 2-5    3-3 3-4 3-5    4-3 4-4 4-5
+    // 1-6 1-7 1-8    2-6 2-7 2-8    3-6 3-7 3-8    4-6 4-7 4-8
+    // 
+    // 5-0 5-1 5-2
+    // 5-3 5-4 5-5
+    // 5-6 5-7 5-8
+    private void VirtualUp() {
+        var tempUp = _virtualCube[0];
+        _virtualCube[0][0] = tempUp[3];
+        _virtualCube[0][1] = tempUp[0];
+        _virtualCube[0][2] = tempUp[1];
+        _virtualCube[0][5] = tempUp[2];
+        _virtualCube[0][8] = tempUp[5];
+        _virtualCube[0][7] = tempUp[8];
+        _virtualCube[0][6] = tempUp[7];
+        _virtualCube[0][3] = tempUp[6];
+
+        var tempFront = _virtualCube[1];
+        var tempRight = _virtualCube[2];
+        var tempBack = _virtualCube[3];
+        var tempLeft = _virtualCube[4];
+        _virtualCube[1][0] = tempFront[1];
+        _virtualCube[1][1] = tempFront[2];
+        _virtualCube[1][2] = tempRight[0];
+        _virtualCube[2][0] = tempRight[1];
+        _virtualCube[2][1] = tempRight[2];
+        _virtualCube[2][2] = tempBack[0];
+        _virtualCube[2][0] = tempBack[1];
+        _virtualCube[2][1] = tempBack[2];
+        _virtualCube[2][2] = tempLeft[0];
+        _virtualCube[3][0] = tempLeft[1];
+        _virtualCube[3][1] = tempLeft[2];
+        _virtualCube[3][2] = tempFront[0];
+    }
+
 }
