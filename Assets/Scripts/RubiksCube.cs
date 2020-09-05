@@ -182,7 +182,7 @@ public class RubiksCube : MonoBehaviour
                 cube.transform.Rotate(localAxis, rotation);
             }
 
-            if(rotation < _rotationThreashold && IsSolved()) {
+            if(_currentMove.Remaining == 0 && IsSolved()) {
                 Debug.LogWarning("Solved!");
                 _plannedMoves.Clear();
                 _previousMoves.Clear();
@@ -293,10 +293,13 @@ public class RubiksCube : MonoBehaviour
     }
 
     private bool IsSolved() {
-        for(int i = 0, c = 0; i < 6; i++) {
-            int valCheck = _virtualCube[i * 9];
-            for(int j = 0; j < 9 && c < 54; j++, c++) {
-                if(_virtualCube[c] != valCheck) return false;
+        // Debug.LogError("checking solve");
+        for(int f = 0; f < 6; f++) {
+            int f_p = f * 9;
+            int valCheck = _virtualCube[f_p];
+            for(int i = 0; i < 9; i++) {
+                // if(_virtualCube[f_p + i] != valCheck) Debug.LogError($"{f_p + i} : {_virtualCube[f_p + i]} != {f * 9} : {valCheck}");
+                if(_virtualCube[f_p + i] != valCheck) return false;
             }
         }
 
