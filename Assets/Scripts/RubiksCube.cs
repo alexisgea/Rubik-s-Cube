@@ -17,7 +17,7 @@ using UnityEngine;
 // add press space to start timer
 // add gold star for current record and grey start for past record
 
-public enum Face {Up, Down, Right, Left, Front, Back, Horizontal, Vertical, Parallel, CubeHorizontal, CubeVertical}
+public enum Face {Up, Front, Right, Back, Left, Down, Horizontal, Vertical, Parallel, CubeHorizontal, CubeVertical}
 
 public struct FaceMove {
     public Face Face;
@@ -108,8 +108,9 @@ public class RubiksCube : MonoBehaviour
     private int[] _ringRight = new int[12] {47, 50, 53, 33, 30, 27, 2, 5, 8, 11, 14, 17};
     private int[] _ringBack = new int[12] {53, 52, 51, 42, 39, 36, 2, 1, 0, 20, 23, 26};
     private int[] _ringLeft = new int[12] {51, 48, 45, 15, 12, 9, 6, 3, 0, 29, 32, 35};
-    private int[] _ringDown = new int[12] {0, 1, 2, 26, 25, 24, 17, 16, 15, 44, 43, 42};
-    private int[] _ringHorizontal = new int[12] {13, 13, 14, 21, 22, 23, 30, 31, 32, 39, 40, 41};
+    private int[] _ringDown = new int[12] {35, 34, 33, 26, 25, 24, 17, 16, 15, 44, 43, 42};
+
+    private int[] _ringHorizontal = new int[12] {12, 13, 14, 21, 22, 23, 30, 31, 32, 39, 40, 41};
     private int[] _ringVertical = new int[12] {46, 49, 52, 34, 31, 28, 1, 4, 7, 10, 13, 16};
     private int[] _ringParallel = new int[12] {48, 49, 50, 25, 22, 19, 5, 4, 3, 37, 40, 43};
 
@@ -138,15 +139,16 @@ public class RubiksCube : MonoBehaviour
 
     public void ReverseLast() {
         _plannedMoves.Clear();
-        var moveToReverse = _previousMoves.Pop();
-        RotateFace(moveToReverse.Face, !moveToReverse.Prime, log:false);
+        if(_previousMoves.Count > 0) {
+            var moveToReverse = _previousMoves.Pop();
+            RotateFace(moveToReverse.Face, !moveToReverse.Prime, log:false);
+        }
     }
 
 
     private void Start() {
         // initialise cube
         _virtualCube = new int[54];
-
         for(int i = 0, c = 0; i < 6; i ++) {
             for(int j = 0; j < 9 && c < 54; j++, c++) {
                 _virtualCube[c] = i;
@@ -154,11 +156,6 @@ public class RubiksCube : MonoBehaviour
         }
 
         _allCubes = GetComponentsInChildren<SmallCube>();
-    }
-
-    private void SmallTest(int[] array) {
-        array[0] = 10;
-        array = new int[1] {50};
     }
 
     private void Update() {
@@ -193,19 +190,35 @@ public class RubiksCube : MonoBehaviour
         if(_currentMove.Remaining <= 0 && _plannedMoves.Count > 0) {
             _currentMove = _plannedMoves.Dequeue();
 
-            // TODO Special cases for ring only rotation
-            // TODO special cases fur cube rotation
             // Perhaps this should be moved to the end or middle of the physical move?
             // the virtual algo is instant
-            VirtualFaceRotation(_currentMove.Face, _currentMove.Prime);
+            if(_currentMove.Face == Face.Horizontal || _currentMove.Face == Face.Vertical || _currentMove.Face == Face.Parallel) {
+                // ring rotation
+                VirtualRingRotation(GetVituralRingIndexes(_currentMove.Face), _currentMove.Prime);
+            }
+            else if(_currentMove.Face == Face.CubeHorizontal) {
+                // horizontal cube rotation
+                VirtualFaceRotation(Face.Up, _currentMove.Prime);
+                VirtualRingRotation(GetVituralRingIndexes(Face.Horizontal), _currentMove.Prime);
+                VirtualFaceRotation(Face.Down, !_currentMove.Prime);
+            }
+            else if(_currentMove.Face == Face.CubeVertical) {
+                // vertical cube rotation
+                VirtualFaceRotation(Face.Right, _currentMove.Prime);
+                VirtualRingRotation(GetVituralRingIndexes(Face.Vertical), _currentMove.Prime);
+                VirtualFaceRotation(Face.Left, !_currentMove.Prime);
+            }
+            else {
+                // standard rotation
+                VirtualFaceRotation(_currentMove.Face, _currentMove.Prime);
+            }
+
 
             if(_currentMove.Hidden && _currentMove.Log) _shuffleMoves.Push(_currentMove);
             else if(_currentMove.Log) _previousMoves.Push(_currentMove);
         }
-
-        // recolor test quads
-
     }
+
 
     private List<SmallCube> GetFaceCubes(Face face) {
         List<SmallCube> faceCubes = new List<SmallCube>();
@@ -310,6 +323,8 @@ public class RubiksCube : MonoBehaviour
     private void VirtualFaceRotation(Face face, bool prime) {
         int f_i = (int)face * 9;
 
+        // Debug.LogError($"{face.ToString()} {(int)face} {f_i}");
+
         int[] faceValues = new int[9]; // todo, could replace by Array.Copy or something similar
         for(int i = 0; i < 9; i++) {
             faceValues[i] = _virtualCube[f_i + i];
@@ -327,6 +342,7 @@ public class RubiksCube : MonoBehaviour
         _virtualCube[f_i + 6] = prime ? faceValues[0] : faceValues[8];
         _virtualCube[f_i + 3] = prime ? faceValues[1] : faceValues[7];
 
+        // if(!prime)
         VirtualRingRotation(GetVituralRingIndexes(face), prime);
     }
 
@@ -342,16 +358,17 @@ public class RubiksCube : MonoBehaviour
     // 48 49 50
     // 51 52 53
 
-    // {47, 50, 53, 33, 30, 27, 2, 5, 8, 11, 14, 17};
+    // colors{0-w, 1-o, 2-g, 3-r, 4-b, 5-y}
+
+    // {45, 46, 47, 24, 21, 18, 8, 7, 6, 38, 41, 44}
     private void VirtualRingRotation(int[] ringIndexes, bool prime) {
+        // Debug.LogWarning("new rot");
         // we temporarily store and already shift the values at the given indexes
         int[] shiftedValues = new int[ringIndexes.Length];
         for(int i = 0; i < ringIndexes.Length; i++) {
             int r_i = (prime ? (i - 3) : (i + 3)) % ringIndexes.Length;
             if(r_i < 0) r_i += ringIndexes.Length;
-
             // Debug.LogError($"{ringIndexes[i]} : {_virtualCube[ringIndexes[i]] } -> {ringIndexes[r_i]} : {_virtualCube[ringIndexes[r_i]]}");
-
             shiftedValues[i] = _virtualCube[ringIndexes[r_i]];
         }
 

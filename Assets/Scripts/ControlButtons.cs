@@ -20,7 +20,7 @@ public class ControlButtons : MonoBehaviour
     private Vector3 _startMouseDragPosition;
     private float _cubeRotationSensitivity = 100f;
 
-    private Color[] _faceColors = new Color[6] {Color.white, new Color(1, 0.5f, 0, 1), Color.green, Color.red, Color.blue, Color.yellow};
+    private Color[] _faceColors = new Color[6] {Color.white, new Color(1, 0.5f, 0, 1), Color.green, Color.red, new Color(0, 0.5f, 1, 1), Color.yellow};
 
 
     private void Start() {
@@ -105,55 +105,50 @@ public class ControlButtons : MonoBehaviour
         _rCube.ReverseAll();
     }
 
-    public void TurnUp() {
-        _rCube.RotateFace(Face.CubeVertical, prime:true);
+    public void RotateCubeVertical(bool prime) {
+        _rCube.RotateFace(Face.CubeVertical, prime);
     }
-
-    public void TurnDown() {
-        _rCube.RotateFace(Face.CubeVertical, prime:false);
-    }
-
-    public void TurnRight() {
-        _rCube.RotateFace(Face.CubeHorizontal, prime:false);
-    }
-
-    public void TurnLeft() {
-        _rCube.RotateFace(Face.CubeHorizontal, prime:true);
+    
+    public void RotateCubeHorizontal(bool prime) {
+        _rCube.RotateFace(Face.CubeHorizontal, prime);
     }
 
 
-    public void RotateUp() {
-        _rCube.RotateFace(Face.Up, prime:false);
-    }
-    public void RotateUpPrime() {
-        _rCube.RotateFace(Face.Up, prime:true);
+    public void RotateUp(bool prime) {
+        _rCube.RotateFace(Face.Up, prime);
     }
 
-    public void RotateDown() {
-        _rCube.RotateFace(Face.Down, prime:false);
-    }
-    public void RotateDownPrime() {
-        _rCube.RotateFace(Face.Down, prime:true);
+    public void RotateDown(bool prime) {
+        _rCube.RotateFace(Face.Down, prime);
     }
 
-    public void RotateRight() {
-        _rCube.RotateFace(Face.Right, prime:false);
-    }
-    public void RotateRightPrime() {
-        _rCube.RotateFace(Face.Right, prime:true);
+    public void RotateRight(bool prime) {
+        _rCube.RotateFace(Face.Right, prime);
     }
 
-    public void RotateLeft() {
-        _rCube.RotateFace(Face.Left, prime:false);
-    }
-    public void RotateLeftPrime() {
-        _rCube.RotateFace(Face.Left, prime:true);
+    public void RotateLeft(bool prime) {
+        _rCube.RotateFace(Face.Left, prime);
     }
 
-    public void RotateFront() {
-        _rCube.RotateFace(Face.Front, prime:false);
+    public void RotateFront(bool prime) {
+        _rCube.RotateFace(Face.Front, prime);
     }
-    public void RotateFrontPrime() {
-        _rCube.RotateFace(Face.Front, prime:true);
+
+
+    public void RotateBack(bool prime) {
+        _rCube.RotateFace(Face.Back, prime);
     }
+
+    public void RotateHorizontal(bool prime) {
+        _rCube.RotateFace(Face.Horizontal, prime);
+    }
+
+    public void RotateVertical(bool prime) {
+        _rCube.RotateFace(Face.Vertical, prime);
+    }
+
+    public void RotateParallel(bool prime) {
+        _rCube.RotateFace(Face.Parallel, prime);
+    }
+
 }
