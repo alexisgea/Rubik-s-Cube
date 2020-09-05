@@ -8,6 +8,8 @@ using System.Linq;
 public class ControlButtons : MonoBehaviour
 {
     [SerializeField] Text _moves;
+    [SerializeField] Transform _cubeMapParent;
+    private Image[] _cubeMap;
     private RubiksCube _rCube;
 
 
@@ -18,10 +20,21 @@ public class ControlButtons : MonoBehaviour
     private Vector3 _startMouseDragPosition;
     private float _cubeRotationSensitivity = 100f;
 
+    private Color[] _faceColors = new Color[6] {Color.white, new Color(1, 0.5f, 0, 1), Color.green, Color.red, Color.blue, Color.yellow};
+
 
     private void Start() {
         _rCube = FindObjectOfType<RubiksCube>();
         _startRCubeRotation = _rCube.transform.rotation;
+
+        // get cube map tiles
+        _cubeMap = new Image[_rCube.VirtualCube.Length];
+        for(int f = 0, i = 0; f < _cubeMapParent.childCount; f++) {
+            var face = _cubeMapParent.GetChild(f);
+            for(int t = 0; t < face.childCount; t++, i++) {
+                _cubeMap[i] = face.GetChild(t).GetComponent<Image>();
+            }
+        }
     }
 
     private void Update() {
@@ -48,6 +61,14 @@ public class ControlButtons : MonoBehaviour
         }
         else {
             _rCube.transform.rotation = Quaternion.Lerp(_rCube.transform.rotation, _startRCubeRotation, _cubeRotationResetSpeed * Time.deltaTime);
+        }
+
+        // cube map coloring
+        for(int i = 0; i < _cubeMap.Length; i++) {
+            _cubeMap[i].color = _faceColors[_rCube.VirtualCube[i]];
+
+            _cubeMap[i].gameObject.GetComponentInChildren<Text>().text = i.ToString();
+            // _cubeMap[i].gameObject.GetComponentInChildren<Text>().text = _rCube.VirtualCube[i].ToString();
         }
 
         // if(Input.Key)

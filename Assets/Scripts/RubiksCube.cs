@@ -17,8 +17,8 @@ using UnityEngine;
 // add press space to start timer
 // add gold star for current record and grey start for past record
 
-
 public enum Face {Up, Down, Right, Left, Front, Back, Horizontal, Vertical, Parallel, CubeHorizontal, CubeVertical}
+
 public struct FaceMove {
     public Face Face;
     public bool Prime;
@@ -31,22 +31,22 @@ public struct FaceMove {
         {
             case Face.Up:
                 return this.Prime ? "U'" : "U";
-            
+
             case Face.Down:
                 return this.Prime ? "D'" : "D";
-            
+
             case Face.Right:
                 return this.Prime ? "R'" : "R";
-            
+
             case Face.Left:
                 return this.Prime ? "L'" : "L";
 
             case Face.Front:
                 return this.Prime ? "F'" : "F";
-            
+
             case Face.Back:
                 return this.Prime ? "B'" : "B";
-            
+
             case Face.Horizontal:
                 return this.Prime ? "H'" : "H";
 
@@ -58,10 +58,10 @@ public struct FaceMove {
 
             case Face.CubeHorizontal:
                 return this.Prime ? "CL" : "CR";
-            
+
             case Face.CubeVertical:
                 return this.Prime ? "CD" : "CU";
-            
+
             default:
                 return "";
         }
@@ -70,38 +70,48 @@ public struct FaceMove {
 
 public class RubiksCube : MonoBehaviour
 {
-    //cube face ids
 
-    // 0-0 0-1 0-2
-    // 0-3 0-4 0-5
-    // 0-6 0-7 0-8
-    // 
-    // 1-0 1-1 1-2    2-0 2-1 2-2    3-0 3-1 3-2    4-0 4-1 4-2
-    // 1-3 1-4 1-5    2-3 2-4 2-5    3-3 3-4 3-5    4-3 4-4 4-5
-    // 1-6 1-7 1-8    2-6 2-7 2-8    3-6 3-7 3-8    4-6 4-7 4-8
-    // 
-    // 5-0 5-1 5-2
-    // 5-3 5-4 5-5
-    // 5-6 5-7 5-8
-
-    private enum FaceId {white = 0, green = 1, red = 2, blue = 3, orange = 4, yellow = 5}
-    private int[][] _virtualCube;
+    public int[] VirtualCube {get{return _virtualCube;}}
 
     private SmallCube[] _allCubes = new SmallCube[27];
 
+    private FaceMove _currentMove;
     private Queue<FaceMove> _plannedMoves = new Queue<FaceMove>();
     public FaceMove[] PreviousMoves {get { return _previousMoves.ToArray(); }}
     private Stack<FaceMove> _previousMoves = new Stack<FaceMove>();
     private Stack<FaceMove> _shuffleMoves = new Stack<FaceMove>();
 
-    private FaceMove _currentMove;
-
     private float _rotationThreashold = 0.1f;
     private float _rotationLerpOffset = 10f;
-
     private float _rotationSpeed = 10f;
     private float _errorMargin = 0.0001f;
 
+    // full cube plan
+    //
+    // 00 01 02
+    // 03 04 05
+    // 06 07 08
+    //
+    // 09 10 11    18 19 20    27 28 29    36 37 38
+    // 12 13 14    21 22 23    30 31 32    39 40 41
+    // 15 16 17    24 25 26    33 34 35    42 43 44
+    //
+    // 45 46 47
+    // 48 49 50
+    // 51 52 53
+    //
+    // ring indexes
+    // 00 01 02    03 04 05    06 07 08    09 10 11
+    private int[] _virtualCube;
+    private int[] _ringUp = new int[12] {9, 10, 11, 18, 19, 20, 27, 28, 29, 36, 37, 38};
+    private int[] _ringFront = new int[12] {45, 46, 47, 24, 21, 18, 8, 7, 6, 38, 41, 44};
+    private int[] _ringRight = new int[12] {47, 50, 53, 33, 30, 27, 2, 5, 8, 11, 14, 17};
+    private int[] _ringBack = new int[12] {53, 52, 51, 42, 39, 36, 2, 1, 0, 20, 23, 26};
+    private int[] _ringLeft = new int[12] {51, 48, 45, 15, 12, 9, 6, 3, 0, 29, 32, 35};
+    private int[] _ringDown = new int[12] {0, 1, 2, 26, 25, 24, 17, 16, 15, 44, 43, 42};
+    private int[] _ringHorizontal = new int[12] {13, 13, 14, 21, 22, 23, 30, 31, 32, 39, 40, 41};
+    private int[] _ringVertical = new int[12] {46, 49, 52, 34, 31, 28, 1, 4, 7, 10, 13, 16};
+    private int[] _ringParallel = new int[12] {48, 49, 50, 25, 22, 19, 5, 4, 3, 37, 40, 43};
 
 
     public void RotateFace(Face face, bool prime, bool hidden = false, bool log = true) {
@@ -135,15 +145,20 @@ public class RubiksCube : MonoBehaviour
 
     private void Start() {
         // initialise cube
-        _virtualCube = new int[6][];
-        for(int i = 0; i < 6; i ++) {
-            _virtualCube[i] = new int[9];
-            for(int j = 0; j < 9; j++) {
-                _virtualCube[i][j] = i;
+        _virtualCube = new int[54];
+
+        for(int i = 0, c = 0; i < 6; i ++) {
+            for(int j = 0; j < 9 && c < 54; j++, c++) {
+                _virtualCube[c] = i;
             }
         }
 
         _allCubes = GetComponentsInChildren<SmallCube>();
+    }
+
+    private void SmallTest(int[] array) {
+        array[0] = 10;
+        array = new int[1] {50};
     }
 
     private void Update() {
@@ -166,7 +181,7 @@ public class RubiksCube : MonoBehaviour
                 var localAxis = cube.transform.InverseTransformDirection(worldAxis);
                 cube.transform.Rotate(localAxis, rotation);
             }
-            
+
             if(rotation < _rotationThreashold && IsSolved()) {
                 Debug.LogWarning("Solved!");
                 _plannedMoves.Clear();
@@ -178,9 +193,18 @@ public class RubiksCube : MonoBehaviour
         if(_currentMove.Remaining <= 0 && _plannedMoves.Count > 0) {
             _currentMove = _plannedMoves.Dequeue();
 
+            // TODO Special cases for ring only rotation
+            // TODO special cases fur cube rotation
+            // Perhaps this should be moved to the end or middle of the physical move?
+            // the virtual algo is instant
+            VirtualFaceRotation(_currentMove.Face, _currentMove.Prime);
+
             if(_currentMove.Hidden && _currentMove.Log) _shuffleMoves.Push(_currentMove);
             else if(_currentMove.Log) _previousMoves.Push(_currentMove);
         }
+
+        // recolor test quads
+
     }
 
     private List<SmallCube> GetFaceCubes(Face face) {
@@ -193,15 +217,15 @@ public class RubiksCube : MonoBehaviour
                 case Face.Up:
                     if(cube.Position.y >= (1 - _errorMargin)) faceCubes.Add(cube);
                     break;
-                
+
                 case Face.Down:
                     if(cube.Position.y <= -(1 - _errorMargin)) faceCubes.Add(cube);
                     break;
-                
+
                 case Face.Right:
                     if(cube.Position.x >= (1 - _errorMargin)) faceCubes.Add(cube);
                     break;
-                
+
                 case Face.Left:
                     if(cube.Position.x <= -(1 - _errorMargin)) faceCubes.Add(cube);
                     break;
@@ -209,7 +233,7 @@ public class RubiksCube : MonoBehaviour
                 case Face.Front:
                     if(cube.Position.z <= -(1 - _errorMargin)) faceCubes.Add(cube);
                     break;
-                
+
                 case Face.Back:
                     if(cube.Position.z >= (1 - _errorMargin)) faceCubes.Add(cube);
                     break;
@@ -244,126 +268,113 @@ public class RubiksCube : MonoBehaviour
             case Face.Horizontal:
             case Face.CubeHorizontal:
                 return rotation.Prime ? Vector3.down : Vector3.up;
-            
+
             case Face.Down:
                 return rotation.Prime ? Vector3.up : Vector3.down;
-            
+
             case Face.Right:
             case Face.Vertical:
             case Face.CubeVertical:
                 return rotation.Prime ? Vector3.left : Vector3.right;
-            
+
             case Face.Left:
                 return rotation.Prime ? Vector3.right : Vector3.left;
 
             case Face.Front:
             case Face.Parallel:
                 return rotation.Prime ? Vector3.forward : Vector3.back;
-            
+
             case Face.Back:
                 return rotation.Prime ? Vector3.back : Vector3.forward;
-            
+
             default:
                 return Vector3.zero;
         }
     }
 
     private bool IsSolved() {
-        for(int i = 0; i < _virtualCube.Length; i++) {
-            int valCheck = _virtualCube[i][5];
-            for(int j = 0; j < _virtualCube[i].Length; j++) {
-                if(_virtualCube[i][j] != valCheck) return false;
+        for(int i = 0, c = 0; i < 6; i++) {
+            int valCheck = _virtualCube[i * 9];
+            for(int j = 0; j < 9 && c < 54; j++, c++) {
+                if(_virtualCube[c] != valCheck) return false;
             }
         }
 
         return true;
     }
-    
-    private void VirtualFaceRotation(ref int[] face) {
-        var tempFace = face;
 
-        face[0] = tempFace[3];
-        face[1] = tempFace[0];
-        face[2] = tempFace[1];
-        face[5] = tempFace[2];
-        face[8] = tempFace[5];
-        face[7] = tempFace[8];
-        face[6] = tempFace[7];
-        face[3] = tempFace[6];
+
+    private void VirtualFaceRotation(Face face, bool prime) {
+        int f_i = (int)face * 9;
+
+        int[] faceValues = new int[9]; // todo, could replace by Array.Copy or something similar
+        for(int i = 0; i < 9; i++) {
+            faceValues[i] = _virtualCube[f_i + i];
+        }
+
+        _virtualCube[f_i + 0] = prime ? faceValues[2] : faceValues[6];
+        _virtualCube[f_i + 1] = prime ? faceValues[5] : faceValues[3];
+
+        _virtualCube[f_i + 2] = prime ? faceValues[8] : faceValues[0];
+        _virtualCube[f_i + 5] = prime ? faceValues[7] : faceValues[1];
+
+        _virtualCube[f_i + 8] = prime ? faceValues[6] : faceValues[2];
+        _virtualCube[f_i + 7] = prime ? faceValues[3] : faceValues[5];
+
+        _virtualCube[f_i + 6] = prime ? faceValues[0] : faceValues[8];
+        _virtualCube[f_i + 3] = prime ? faceValues[1] : faceValues[7];
+
+        VirtualRingRotation(GetVituralRingIndexes(face), prime);
     }
 
-    private void VirtualFaceRotationPrime(ref int[] face) {
-        var tempFace = face;
+    // 00 01 02
+    // 03 04 05
+    // 06 07 08
+    //
+    // 09 10 11    18 19 20    27 28 29    36 37 38
+    // 12 13 14    21 22 23    30 31 32    39 40 41
+    // 15 16 17    24 25 26    33 34 35    42 43 44
+    //
+    // 45 46 47
+    // 48 49 50
+    // 51 52 53
 
-        face[0] = tempFace[1];
-        face[1] = tempFace[2];
-        face[2] = tempFace[5];
-        face[5] = tempFace[8];
-        face[8] = tempFace[7];
-        face[7] = tempFace[6];
-        face[6] = tempFace[3];
-        face[3] = tempFace[0];
+    // {47, 50, 53, 33, 30, 27, 2, 5, 8, 11, 14, 17};
+    private void VirtualRingRotation(int[] ringIndexes, bool prime) {
+        // we temporarily store and already shift the values at the given indexes
+        int[] shiftedValues = new int[ringIndexes.Length];
+        for(int i = 0; i < ringIndexes.Length; i++) {
+            int r_i = (prime ? (i - 3) : (i + 3)) % ringIndexes.Length;
+            if(r_i < 0) r_i += ringIndexes.Length;
+
+            // Debug.LogError($"{ringIndexes[i]} : {_virtualCube[ringIndexes[i]] } -> {ringIndexes[r_i]} : {_virtualCube[ringIndexes[r_i]]}");
+
+            shiftedValues[i] = _virtualCube[ringIndexes[r_i]];
+        }
+
+        // we attribute the shifted values back at the given indexes
+        for(int i = 0; i < ringIndexes.Length; i++) {
+            // Debug.LogError($"{ringIndexes[i]} : {_virtualCube[ringIndexes[i]]} -> {shiftedValues[i]}");
+            _virtualCube[ringIndexes[i]] = shiftedValues[i];
+        }
     }
 
-    private void VirtualUp() {
-        VirtualFaceRotation(ref _virtualCube[0]);
+    private int[] GetVituralRingIndexes(Face rotatingFace) {
 
-        var tempFront = _virtualCube[1];
-        var tempRight = _virtualCube[2];
-        var tempBack = _virtualCube[3];
-        var tempLeft = _virtualCube[4];
+        switch (rotatingFace)
+        {
+            case Face.Up :          return _ringUp;
+            case Face.Front :       return _ringFront;
+            case Face.Right :       return _ringRight;
+            case Face.Back :        return _ringBack;
+            case Face.Left :        return _ringLeft;
+            case Face.Down :        return _ringDown;
 
-        _virtualCube[1][0] = tempFront[1];
-        _virtualCube[1][1] = tempFront[2];
-        _virtualCube[1][2] = tempRight[0];
+            case Face.Horizontal :  return _ringHorizontal;
+            case Face.Vertical :    return _ringVertical;
+            case Face.Parallel :    return _ringParallel;
 
-        _virtualCube[2][0] = tempRight[1];
-        _virtualCube[2][1] = tempRight[2];
-        _virtualCube[2][2] = tempBack[0];
-
-        _virtualCube[2][0] = tempBack[1];
-        _virtualCube[2][1] = tempBack[2];
-        _virtualCube[2][2] = tempLeft[0];
-
-        _virtualCube[3][0] = tempLeft[1];
-        _virtualCube[3][1] = tempLeft[2];
-        _virtualCube[3][2] = tempFront[0];
+            default: return new int[12];
+        }
     }
-
-    // 0-0 0-1 0-2
-    // 0-3 0-4 0-5
-    // 0-6 0-7 0-8
-    // 
-    // 1-0 1-1 1-2    2-0 2-1 2-2    3-0 3-1 3-2    4-0 4-1 4-2
-    // 1-3 1-4 1-5    2-3 2-4 2-5    3-3 3-4 3-5    4-3 4-4 4-5
-    // 1-6 1-7 1-8    2-6 2-7 2-8    3-6 3-7 3-8    4-6 4-7 4-8
-    // 
-    // 5-0 5-1 5-2
-    // 5-3 5-4 5-5
-    // 5-6 5-7 5-8
-    private void VirtualFront() {
-        VirtualFaceRotation(ref _virtualCube[1]);
-
-        var tempUp = _virtualCube[0];
-        var tempRight = _virtualCube[2];
-        var tempLeft = _virtualCube[4];
-        var tempDown = _virtualCube[5];
-
-        _virtualCube[5][0] = tempDown[1];
-        _virtualCube[5][1] = tempDown[2];
-        _virtualCube[5][2] = tempRight[6];
-
-        _virtualCube[2][6] = tempRight[3];
-        _virtualCube[2][3] = tempRight[0];
-        _virtualCube[2][0] = tempUp[8];
-
-        _virtualCube[0][8] = tempUp[7];
-        _virtualCube[0][7] = tempUp[6];
-        _virtualCube[0][6] = tempLeft[2];
-
-        _virtualCube[4][2] = tempLeft[5];
-        _virtualCube[4][5] = tempLeft[8];
-        _virtualCube[4][8] = tempDown[0];
-    }
-
 }
