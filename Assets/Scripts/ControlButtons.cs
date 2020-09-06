@@ -69,7 +69,57 @@ public class ControlButtons : MonoBehaviour
             _cubeMap[i].gameObject.GetComponentInChildren<Text>().text = i.ToString();
         }
 
-        // if(Input.Key)
+        // keyboard controls
+        if(Input.GetKeyDown(KeyCode.U)) {
+            RotateUp(prime:false);
+        }
+        if(Input.GetKeyDown(KeyCode.R)) {
+            RotateUp(prime:true);
+        }
+
+        if(Input.GetKeyDown(KeyCode.J)) {
+            RotateFront(prime:false);
+        }
+        if(Input.GetKeyDown(KeyCode.F)) {
+            RotateFront(prime:true);
+        }
+
+        if(Input.GetKeyDown(KeyCode.I)) {
+            RotateRight(prime:false);
+        }
+        if(Input.GetKeyDown(KeyCode.K)) {
+            RotateRight(prime:true);
+        }
+
+        if(Input.GetKeyDown(KeyCode.E)) {
+            RotateLeft(prime:false);
+        }
+        if(Input.GetKeyDown(KeyCode.D)) {
+            RotateLeft(prime:true);
+        }
+
+        if(Input.GetKeyDown(KeyCode.L)) {
+            RotateDown(prime:false);
+        }
+        if(Input.GetKeyDown(KeyCode.S)) {
+            RotateDown(prime:true);
+        }
+
+
+
+        if(Input.GetKeyDown(KeyCode.UpArrow)) {
+            RotateCubeVertical(prime:false);
+        }
+        if(Input.GetKeyDown(KeyCode.DownArrow)) {
+            RotateCubeVertical(prime:true);
+        }
+
+        if(Input.GetKeyDown(KeyCode.RightArrow)) {
+            RotateCubeHorizontal(prime:false);
+        }
+        if(Input.GetKeyDown(KeyCode.LeftArrow)) {
+            RotateCubeHorizontal(prime:true);
+        }
     }
 
 

@@ -6,7 +6,8 @@ using UnityEngine;
 // IDEAS
 // When moving, push the cam/cube slightly on the side to give some impact
 // add some more smoothing and variance to the rols
-// add key shortcut for solving the cube
+// add key shortcut for solving the cube (need back, rings and cube flip)
+// add personalisable keys (and settings for sounds, speed and such)
 // add a leaderboard and timers
 // add sounds
 // make a nicer cube
@@ -16,6 +17,7 @@ using UnityEngine;
 // add controller support with vibration
 // add press space to start timer
 // add gold star for current record and grey start for past record
+// add better lookaround
 
 public enum Face {Up, Front, Right, Back, Left, Down, Horizontal, Vertical, Parallel, CubeHorizontal, CubeVertical}
 
@@ -110,6 +112,8 @@ public class RubiksCube : MonoBehaviour
     private int[] _phHorizontalLayerInd = new int[] {9, 10, 11, 12, 13, 14, 15, 16, 17};
     private int[] _phVerticalLayerInd = new int[] {7, 4, 1, 16, 13, 10, 25, 22, 19};
     private int[] _phParallelLayerInd = new int[] {3, 4, 5, 12, 13, 14, 21, 22, 23};
+    private int[] _phAllIndexes = new int[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+        14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26};
 
     // virtual cube plan
     //
@@ -209,6 +213,7 @@ public class RubiksCube : MonoBehaviour
                 _physicalCube[i].transform.Rotate(localAxis, rotation);
             }
 
+            // TODO don't clear all on solve
             if(_currentMove.Remaining == 0 && IsSolved()) {
                 Debug.LogWarning("Solved!");
                 _plannedMoves.Clear();
@@ -317,7 +322,7 @@ public class RubiksCube : MonoBehaviour
             case Face.Horizontal: return _phHorizontalLayerInd;
             case Face.Parallel: return _phParallelLayerInd;
 
-            default: return new int[27];
+            default: return _phAllIndexes;
         }
     }
 
