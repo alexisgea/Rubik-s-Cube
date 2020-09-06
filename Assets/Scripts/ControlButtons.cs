@@ -9,12 +9,11 @@ public class ControlButtons : MonoBehaviour
 {
     [SerializeField] Text _moves;
     [SerializeField] Transform _cubeMapParent;
-    private Image[] _cubeMap;
-    private RubiksCube _rCube;
 
+    private RubiksCube _rCube;
+    private Image[] _cubeMap;
 
     private Quaternion _startRCubeRotation;
-    private Quaternion _targetCubeRotation;
     private float _cubeRotationSpeed = 10f;
     private float _cubeRotationResetSpeed = 10f;
     private Vector3 _startMouseDragPosition;
@@ -68,7 +67,6 @@ public class ControlButtons : MonoBehaviour
             _cubeMap[i].color = _faceColors[_rCube.VirtualCube[i]];
 
             _cubeMap[i].gameObject.GetComponentInChildren<Text>().text = i.ToString();
-            // _cubeMap[i].gameObject.GetComponentInChildren<Text>().text = _rCube.VirtualCube[i].ToString();
         }
 
         // if(Input.Key)
@@ -88,7 +86,7 @@ public class ControlButtons : MonoBehaviour
             }
             else {
                 lastMove = new FaceMove() {Face = face, Prime = prime};
-                _rCube.RotateFace(face, prime, hidden:true);
+                _rCube.RotateFace(face, prime, hidden:false);
             }
         }
     }
