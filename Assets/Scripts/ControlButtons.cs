@@ -86,7 +86,7 @@ public class ControlButtons : MonoBehaviour
             }
             else {
                 lastMove = new FaceMove() {Face = face, Prime = prime};
-                _rCube.RotateFace(face, prime, hidden:false);
+                _rCube.RotateFace(face, prime, hidden:true);
             }
         }
     }
