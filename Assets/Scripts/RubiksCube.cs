@@ -74,6 +74,11 @@ public class RubiksCube : MonoBehaviour
 {
     public int[] VirtualCube {get{return _virtualCube;}}
 
+    [SerializeField] AudioClip[] _turnSounds;
+    [SerializeField] AudioClip[] _flipSounds;
+    private AudioSource _audioSource;
+
+
 
     private FaceMove _currentMove;
     private Queue<FaceMove> _plannedMoves = new Queue<FaceMove>();
@@ -182,6 +187,8 @@ public class RubiksCube : MonoBehaviour
 
 
     private void Start() {
+        _audioSource = GetComponent<AudioSource>();
+
         // initialise cube
         _virtualCube = new int[54];
         for(int i = 0, c = 0; i < 6; i ++) {
@@ -224,6 +231,13 @@ public class RubiksCube : MonoBehaviour
 
         if(_currentMove.Remaining <= 0 && _plannedMoves.Count > 0) {
             _currentMove = _plannedMoves.Dequeue();
+
+            if(_currentMove.Face == Face.CubeHorizontal || _currentMove.Face == Face.CubeVertical) {
+                _audioSource.PlayOneShot(_flipSounds[Random.Range(0, _flipSounds.Length)]);
+            }
+            else {
+                _audioSource.PlayOneShot(_turnSounds[Random.Range(0, _turnSounds.Length)]);
+            }
 
             // Perhaps this should be moved to the end or middle of the physical move?t
             if(_currentMove.Face == Face.Horizontal || _currentMove.Face == Face.Vertical || _currentMove.Face == Face.Parallel) {

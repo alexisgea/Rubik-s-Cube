@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
+using System.Text;
 
 
 public class ControlButtons : MonoBehaviour
 {
     [SerializeField] Text _moves;
     [SerializeField] Transform _cubeMapParent;
+    
 
     private RubiksCube _rCube;
     private Image[] _cubeMap;
@@ -20,7 +22,7 @@ public class ControlButtons : MonoBehaviour
     private float _cubeRotationSensitivity = 100f;
 
     private Color[] _faceColors = new Color[6] {Color.white, new Color(1, 0.5f, 0, 1), Color.green, Color.red, new Color(0, 0.5f, 1, 1), Color.yellow};
-
+    private string _space = "  ";
 
     private void Start() {
         _rCube = FindObjectOfType<RubiksCube>();
@@ -34,17 +36,25 @@ public class ControlButtons : MonoBehaviour
                 _cubeMap[i] = face.GetChild(t).GetComponent<Image>();
             }
         }
+
+        // cube map coloring
+        for(int i = 0; i < _cubeMap.Length; i++) {
+            _cubeMap[i].color = _faceColors[_rCube.VirtualCube[i]];
+            _cubeMap[i].gameObject.GetComponentInChildren<Text>().text = "";
+            // _cubeMap[i].gameObject.GetComponentInChildren<Text>().text = i.ToString();
+        }
     }
 
     private void Update() {
 
         // updating move text
-        string moves = "";
+        StringBuilder moves = new StringBuilder();
         foreach (var move in _rCube.PreviousMoves.Reverse())
         {
-            moves += move.ToString() + " ";
+            moves.Append(move.ToString());
+            moves.Append(_space);
         }
-        _moves.text = moves;
+        _moves.text = moves.ToString();
 
         // cube look around
         var mousePosNormalized = new Vector3(Input.mousePosition.x / (float)Screen.width, Input.mousePosition.y / (float)Screen.height, 0);
@@ -65,8 +75,6 @@ public class ControlButtons : MonoBehaviour
         // cube map coloring
         for(int i = 0; i < _cubeMap.Length; i++) {
             _cubeMap[i].color = _faceColors[_rCube.VirtualCube[i]];
-
-            _cubeMap[i].gameObject.GetComponentInChildren<Text>().text = i.ToString();
         }
 
         // keyboard controls
