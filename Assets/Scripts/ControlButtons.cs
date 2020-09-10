@@ -10,12 +10,15 @@ public class ControlButtons : MonoBehaviour
 {
     [SerializeField] Text _moves;
     [SerializeField] Transform _cubeMapParent;
+    [SerializeField] Transform _cubeParent;
     
 
     private RubiksCube _rCube;
     private Image[] _cubeMap;
 
-    private Quaternion _startRCubeRotation;
+    private Quaternion _startCubeParentRotation;
+    private Quaternion _startCubeRotation;
+
     private float _cubeRotationSpeed = 10f;
     private float _cubeRotationResetSpeed = 10f;
     private Vector3 _startMouseDragPosition;
@@ -25,8 +28,9 @@ public class ControlButtons : MonoBehaviour
     private string _space = "  ";
 
     private void Start() {
-        _rCube = FindObjectOfType<RubiksCube>();
-        _startRCubeRotation = _rCube.transform.rotation;
+        _startCubeParentRotation = _cubeParent.localRotation;
+        _rCube = _cubeParent.GetComponentInChildren<RubiksCube>();
+        _startCubeRotation = _rCube.transform.localRotation;
 
         // get cube map tiles
         _cubeMap = new Image[_rCube.VirtualCube.Length];
@@ -64,12 +68,17 @@ public class ControlButtons : MonoBehaviour
         else if(Input.GetMouseButton(1)){
             var mouseDelta = mousePosNormalized - _startMouseDragPosition;
             mouseDelta *= _cubeRotationSensitivity;
+            
+            // something to do with trigo, I just don't know
+            var targetCubeParentRotation = Quaternion.Euler(mouseDelta.y * 55f / 45f, 0, mouseDelta.y * 35f / 45f);
+            _cubeParent.localRotation = Quaternion.Lerp(_cubeParent.localRotation, targetCubeParentRotation, _cubeRotationSpeed * Time.deltaTime);
 
-            var targetCubeRotation = Quaternion.Euler(mouseDelta.y, -mouseDelta.x * 4f, mouseDelta.y);
-            _rCube.transform.rotation = Quaternion.Lerp(_rCube.transform.rotation, targetCubeRotation, _cubeRotationSpeed * Time.deltaTime);
+            var targetCubeRotation = Quaternion.Euler(0, -mouseDelta.x * 4f, 0);
+            _rCube.transform.localRotation = Quaternion.Lerp(_rCube.transform.localRotation, targetCubeRotation, _cubeRotationSpeed * Time.deltaTime);
         }
         else {
-            _rCube.transform.rotation = Quaternion.Lerp(_rCube.transform.rotation, _startRCubeRotation, _cubeRotationResetSpeed * Time.deltaTime);
+            _cubeParent.localRotation = Quaternion.Lerp(_cubeParent.localRotation, _startCubeParentRotation, _cubeRotationResetSpeed * Time.deltaTime);
+            _rCube.transform.localRotation = Quaternion.Lerp(_rCube.transform.localRotation, _startCubeRotation, _cubeRotationResetSpeed * Time.deltaTime);
         }
 
         // cube map coloring

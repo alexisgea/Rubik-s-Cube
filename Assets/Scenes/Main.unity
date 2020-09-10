@@ -974,6 +974,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _moves: {fileID: 882443783}
   _cubeMapParent: {fileID: 932847648}
+  _cubeParent: {fileID: 2034092060}
 --- !u!1 &180428148
 GameObject:
   m_ObjectHideFlags: 0
@@ -3540,6 +3541,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 644584268}
   m_CullTransparentMesh: 0
+--- !u!4 &660538749 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7630811183002873082, guid: f6efcebbdf25d6b4aa54d96e4ae3e65f, type: 3}
+  m_PrefabInstance: {fileID: 7630811182682926930}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &662818140
 GameObject:
   m_ObjectHideFlags: 0
@@ -14231,6 +14237,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2023295660}
   m_CullTransparentMesh: 0
+--- !u!1 &2034092059
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2034092060}
+  m_Layer: 0
+  m_Name: Rubiks Parent
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2034092060
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2034092059}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 660538749}
+  m_Father: {fileID: 0}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2055443226
 GameObject:
   m_ObjectHideFlags: 0
@@ -15515,7 +15552,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
-    m_TransformParent: {fileID: 0}
+    m_TransformParent: {fileID: 2034092060}
     m_Modifications:
     - target: {fileID: 7630811183002873077, guid: f6efcebbdf25d6b4aa54d96e4ae3e65f, type: 3}
       propertyPath: m_Name
@@ -15535,15 +15572,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7630811183002873082, guid: f6efcebbdf25d6b4aa54d96e4ae3e65f, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 7630811183002873082, guid: f6efcebbdf25d6b4aa54d96e4ae3e65f, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 7630811183002873082, guid: f6efcebbdf25d6b4aa54d96e4ae3e65f, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 7630811183002873082, guid: f6efcebbdf25d6b4aa54d96e4ae3e65f, type: 3}
       propertyPath: m_LocalRotation.w
@@ -15551,7 +15588,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7630811183002873082, guid: f6efcebbdf25d6b4aa54d96e4ae3e65f, type: 3}
       propertyPath: m_RootOrder
-      value: 3
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7630811183002873082, guid: f6efcebbdf25d6b4aa54d96e4ae3e65f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
