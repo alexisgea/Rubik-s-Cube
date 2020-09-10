@@ -756,7 +756,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: P
+  m_Text: S
 --- !u!222 &139319970
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2540,7 +2540,7 @@ GameObject:
   - component: {fileID: 519854908}
   - component: {fileID: 519854907}
   m_Layer: 5
-  m_Name: Turn Right
+  m_Name: Turn Y prime
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2563,7 +2563,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 308, y: 45}
+  m_AnchoredPosition: {x: 220, y: 45}
   m_SizeDelta: {x: 45, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &519854907
@@ -3342,7 +3342,7 @@ GameObject:
   - component: {fileID: 643039783}
   - component: {fileID: 643039782}
   m_Layer: 5
-  m_Name: Parallel
+  m_Name: Standing
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3679,7 +3679,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: P'
+  m_Text: S'
 --- !u!222 &664368834
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3780,7 +3780,7 @@ GameObject:
   - component: {fileID: 677374195}
   - component: {fileID: 677374194}
   m_Layer: 5
-  m_Name: Turn Left
+  m_Name: Turn Y
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3803,7 +3803,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 218, y: 45}
+  m_AnchoredPosition: {x: 310, y: 45}
   m_SizeDelta: {x: 45, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &677374194
@@ -4667,7 +4667,7 @@ GameObject:
   - component: {fileID: 744083737}
   - component: {fileID: 744083736}
   m_Layer: 5
-  m_Name: Horiz
+  m_Name: Equator
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6395,7 +6395,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Right
+  m_Text: Y'
 --- !u!222 &990365797
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -7984,7 +7984,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Left
+  m_Text: Y
 --- !u!222 &1273158692
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -8468,7 +8468,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: V'
+  m_Text: M'
 --- !u!222 &1325930705
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -8626,7 +8626,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: ' Down'
+  m_Text: X'
 --- !u!222 &1360140672
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -10558,7 +10558,7 @@ GameObject:
   - component: {fileID: 1617629650}
   - component: {fileID: 1617629649}
   m_Layer: 5
-  m_Name: Turn Down
+  m_Name: Turn X prime
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10581,7 +10581,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 263, y: 30}
+  m_AnchoredPosition: {x: 265, y: 30}
   m_SizeDelta: {x: 45, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1617629649
@@ -10895,7 +10895,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: V
+  m_Text: M
 --- !u!222 &1636264179
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -12915,7 +12915,7 @@ GameObject:
   - component: {fileID: 1887159533}
   - component: {fileID: 1887159532}
   m_Layer: 5
-  m_Name: Turn Up
+  m_Name: Turn X
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12938,7 +12938,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 263, y: 60}
+  m_AnchoredPosition: {x: 265, y: 60}
   m_SizeDelta: {x: 45, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1887159532
@@ -13901,7 +13901,7 @@ GameObject:
   - component: {fileID: 1995388419}
   - component: {fileID: 1995388418}
   m_Layer: 5
-  m_Name: Horiz Prime
+  m_Name: Equator Prime
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14090,7 +14090,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Up
+  m_Text: X
 --- !u!222 &1996512526
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -14323,7 +14323,7 @@ GameObject:
   - component: {fileID: 2056738770}
   - component: {fileID: 2056738769}
   m_Layer: 5
-  m_Name: Vert Prime
+  m_Name: Middle Prime
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14656,7 +14656,7 @@ GameObject:
   - component: {fileID: 2067529123}
   - component: {fileID: 2067529122}
   m_Layer: 5
-  m_Name: Parallel Prime
+  m_Name: Standing Prime
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14788,7 +14788,7 @@ GameObject:
   - component: {fileID: 2082307149}
   - component: {fileID: 2082307148}
   m_Layer: 5
-  m_Name: Vert
+  m_Name: Middle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -15343,7 +15343,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: H
+  m_Text: E
 --- !u!222 &2107287408
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -15422,7 +15422,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: H'
+  m_Text: E'
 --- !u!222 &2114303730
 CanvasRenderer:
   m_ObjectHideFlags: 0

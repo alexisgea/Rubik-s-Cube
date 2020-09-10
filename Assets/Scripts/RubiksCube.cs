@@ -18,6 +18,7 @@ using UnityEngine;
 // add press space to start timer
 // add gold star for current record and grey start for past record
 // add better lookaround
+
 // add double key press handling
 // add double layer turns (lower cases)
 
@@ -253,21 +254,21 @@ public class RubiksCube : MonoBehaviour
             else if(_currentMove.Face == Face.CubeY) {
                 // horizontal cube rotation
                 PhysicalFaceRotaiton(Face.Up, _currentMove.Prime);
-                PhysicalFaceRotaiton(Face.Equator, !_currentMove.Prime);
+                PhysicalFaceRotaiton(Face.Equator, _currentMove.Prime);
                 PhysicalFaceRotaiton(Face.Down, !_currentMove.Prime);
 
                 VirtualFaceRotation(Face.Up, _currentMove.Prime);
-                VirtualRingRotation(GetVituralRingIndexes(Face.Equator), !_currentMove.Prime);
+                VirtualRingRotation(GetVituralRingIndexes(Face.Equator), _currentMove.Prime);
                 VirtualFaceRotation(Face.Down, !_currentMove.Prime);
             }
             else if(_currentMove.Face == Face.CubeX) {
                 // vertical cube rotation
                 PhysicalFaceRotaiton(Face.Right, _currentMove.Prime);
-                PhysicalFaceRotaiton(Face.Middle, !_currentMove.Prime);
+                PhysicalFaceRotaiton(Face.Middle, _currentMove.Prime);
                 PhysicalFaceRotaiton(Face.Left, !_currentMove.Prime);
 
                 VirtualFaceRotation(Face.Right, _currentMove.Prime);
-                VirtualRingRotation(GetVituralRingIndexes(Face.Middle), !_currentMove.Prime);
+                VirtualRingRotation(GetVituralRingIndexes(Face.Middle), _currentMove.Prime);
                 VirtualFaceRotation(Face.Left, !_currentMove.Prime);
             }
             else if(_currentMove.Face == Face.CubeZ) {
