@@ -18,8 +18,10 @@ using UnityEngine;
 // add press space to start timer
 // add gold star for current record and grey start for past record
 // add better lookaround
+// add double key press handling
+// add double layer turns (lower cases)
 
-public enum Face {Up, Front, Right, Back, Left, Down, Horizontal, Vertical, Parallel, CubeHorizontal, CubeVertical}
+public enum Face {Up, Front, Right, Back, Left, Down, Equator, Middle, Standing, CubeY, CubeX, CubeZ}
 
 public struct FaceMove {
     public Face Face;
@@ -49,20 +51,23 @@ public struct FaceMove {
             case Face.Back:
                 return this.Prime ? "B'" : "B";
 
-            case Face.Horizontal:
-                return this.Prime ? "H'" : "H";
+            case Face.Equator:
+                return this.Prime ? "E'" : "E";
 
-            case Face.Vertical:
-                return this.Prime ? "V'" : "V";
+            case Face.Middle:
+                return this.Prime ? "M'" : "M";
 
-            case Face.Parallel:
-                return this.Prime ? "P'" : "P";
+            case Face.Standing:
+                return this.Prime ? "S'" : "S";
 
-            case Face.CubeHorizontal:
-                return this.Prime ? "CL" : "CR";
+            case Face.CubeY:
+                return this.Prime ? "Y'" : "Y";
 
-            case Face.CubeVertical:
-                return this.Prime ? "CD" : "CU";
+            case Face.CubeX:
+                return this.Prime ? "X'" : "X";
+
+            case Face.CubeZ:
+                return this.Prime ? "Z'" : "Z";
 
             default:
                 return "";
@@ -114,9 +119,9 @@ public class RubiksCube : MonoBehaviour
     private int[] _phLeftFaceInd = new int[] {0, 3, 6, 9, 12, 15, 18, 21, 24};
     private int[] _phDownFaceInd = new int[] {24, 25, 26, 21, 22, 23, 18, 19, 20};
 
-    private int[] _phHorizontalLayerInd = new int[] {9, 10, 11, 12, 13, 14, 15, 16, 17};
-    private int[] _phVerticalLayerInd = new int[] {7, 4, 1, 16, 13, 10, 25, 22, 19};
-    private int[] _phParallelLayerInd = new int[] {3, 4, 5, 12, 13, 14, 21, 22, 23};
+    private int[] _phEquatorLayerInd = new int[] {9, 10, 11, 12, 13, 14, 15, 16, 17};
+    private int[] _phMiddleLayerInd = new int[] {7, 4, 1, 16, 13, 10, 25, 22, 19};
+    private int[] _phStandingLayerInd = new int[] {3, 4, 5, 12, 13, 14, 21, 22, 23};
     private int[] _phAllIndexes = new int[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
         14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26};
 
@@ -149,8 +154,8 @@ public class RubiksCube : MonoBehaviour
     private int[] _vrRingLeftInd = new int[12] {51, 48, 45, 15, 12, 9, 6, 3, 0, 29, 32, 35};
     private int[] _vrRingDownInd = new int[12] {35, 34, 33, 26, 25, 24, 17, 16, 15, 44, 43, 42};
 
-    private int[] _vrRingHorizontalInd = new int[12] {12, 13, 14, 21, 22, 23, 30, 31, 32, 39, 40, 41};
-    private int[] _vrRingVerticalInd = new int[12] {46, 49, 52, 34, 31, 28, 1, 4, 7, 10, 13, 16};
+    private int[] _vrRingEquatorInd = new int[12] {12, 13, 14, 21, 22, 23, 30, 31, 32, 39, 40, 41};
+    private int[] _vrRingMiddleInd = new int[12] {46, 49, 52, 34, 31, 28, 1, 4, 7, 10, 13, 16};
     private int[] _vrRingParallelInd = new int[12] {48, 49, 50, 25, 22, 19, 5, 4, 3, 37, 40, 43};
 
 
@@ -232,7 +237,7 @@ public class RubiksCube : MonoBehaviour
         if(_currentMove.Remaining <= 0 && _plannedMoves.Count > 0) {
             _currentMove = _plannedMoves.Dequeue();
 
-            if(_currentMove.Face == Face.CubeHorizontal || _currentMove.Face == Face.CubeVertical) {
+            if(_currentMove.Face == Face.CubeY || _currentMove.Face == Face.CubeX) {
                 _audioSource.PlayOneShot(_flipSounds[Random.Range(0, _flipSounds.Length)]);
             }
             else {
@@ -240,30 +245,40 @@ public class RubiksCube : MonoBehaviour
             }
 
             // Perhaps this should be moved to the end or middle of the physical move?t
-            if(_currentMove.Face == Face.Horizontal || _currentMove.Face == Face.Vertical || _currentMove.Face == Face.Parallel) {
+            if(_currentMove.Face == Face.Equator || _currentMove.Face == Face.Middle || _currentMove.Face == Face.Standing) {
                 // ring rotation
                 PhysicalFaceRotaiton(_currentMove.Face, _currentMove.Prime);
                 VirtualRingRotation(GetVituralRingIndexes(_currentMove.Face), _currentMove.Prime);
             }
-            else if(_currentMove.Face == Face.CubeHorizontal) {
+            else if(_currentMove.Face == Face.CubeY) {
                 // horizontal cube rotation
                 PhysicalFaceRotaiton(Face.Up, _currentMove.Prime);
-                PhysicalFaceRotaiton(Face.Horizontal, _currentMove.Prime);
+                PhysicalFaceRotaiton(Face.Equator, !_currentMove.Prime);
                 PhysicalFaceRotaiton(Face.Down, !_currentMove.Prime);
 
                 VirtualFaceRotation(Face.Up, _currentMove.Prime);
-                VirtualRingRotation(GetVituralRingIndexes(Face.Horizontal), _currentMove.Prime);
+                VirtualRingRotation(GetVituralRingIndexes(Face.Equator), !_currentMove.Prime);
                 VirtualFaceRotation(Face.Down, !_currentMove.Prime);
             }
-            else if(_currentMove.Face == Face.CubeVertical) {
+            else if(_currentMove.Face == Face.CubeX) {
                 // vertical cube rotation
                 PhysicalFaceRotaiton(Face.Right, _currentMove.Prime);
-                PhysicalFaceRotaiton(Face.Vertical, _currentMove.Prime);
+                PhysicalFaceRotaiton(Face.Middle, !_currentMove.Prime);
                 PhysicalFaceRotaiton(Face.Left, !_currentMove.Prime);
 
                 VirtualFaceRotation(Face.Right, _currentMove.Prime);
-                VirtualRingRotation(GetVituralRingIndexes(Face.Vertical), _currentMove.Prime);
+                VirtualRingRotation(GetVituralRingIndexes(Face.Middle), !_currentMove.Prime);
                 VirtualFaceRotation(Face.Left, !_currentMove.Prime);
+            }
+            else if(_currentMove.Face == Face.CubeZ) {
+                // vertical cube rotation
+                PhysicalFaceRotaiton(Face.Front, _currentMove.Prime);
+                PhysicalFaceRotaiton(Face.Standing, _currentMove.Prime);
+                PhysicalFaceRotaiton(Face.Back, !_currentMove.Prime);
+
+                VirtualFaceRotation(Face.Front, _currentMove.Prime);
+                VirtualRingRotation(GetVituralRingIndexes(Face.Standing), _currentMove.Prime);
+                VirtualFaceRotation(Face.Back, !_currentMove.Prime);
             }
             else {
                 // standard rotation
@@ -295,23 +310,24 @@ public class RubiksCube : MonoBehaviour
         switch (rotation.Face)
         {
             case Face.Up:
-            case Face.Horizontal:
-            case Face.CubeHorizontal:
+            case Face.CubeY:
                 return rotation.Prime ? Vector3.down : Vector3.up;
 
             case Face.Down:
+            case Face.Equator:
                 return rotation.Prime ? Vector3.up : Vector3.down;
 
             case Face.Right:
-            case Face.Vertical:
-            case Face.CubeVertical:
+            case Face.CubeX:
                 return rotation.Prime ? Vector3.left : Vector3.right;
 
             case Face.Left:
+            case Face.Middle:
                 return rotation.Prime ? Vector3.right : Vector3.left;
 
             case Face.Front:
-            case Face.Parallel:
+            case Face.Standing:
+            case Face.CubeZ:
                 return rotation.Prime ? Vector3.forward : Vector3.back;
 
             case Face.Back:
@@ -332,9 +348,9 @@ public class RubiksCube : MonoBehaviour
             case Face.Front: return _phFrontFaceInd;
             case Face.Back: return _phBackFaceInd;
 
-            case Face.Vertical: return _phVerticalLayerInd;
-            case Face.Horizontal: return _phHorizontalLayerInd;
-            case Face.Parallel: return _phParallelLayerInd;
+            case Face.Middle: return _phMiddleLayerInd;
+            case Face.Equator: return _phEquatorLayerInd;
+            case Face.Standing: return _phStandingLayerInd;
 
             default: return _phAllIndexes;
         }
@@ -410,9 +426,9 @@ public class RubiksCube : MonoBehaviour
             case Face.Left :        return _vrRingLeftInd;
             case Face.Down :        return _vrRingDownInd;
 
-            case Face.Horizontal :  return _vrRingHorizontalInd;
-            case Face.Vertical :    return _vrRingVerticalInd;
-            case Face.Parallel :    return _vrRingParallelInd;
+            case Face.Equator :  return _vrRingEquatorInd;
+            case Face.Middle :    return _vrRingMiddleInd;
+            case Face.Standing :    return _vrRingParallelInd;
 
             default: return new int[12];
         }

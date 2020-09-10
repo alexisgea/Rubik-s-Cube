@@ -162,11 +162,11 @@ public class ControlButtons : MonoBehaviour
     }
 
     public void RotateCubeVertical(bool prime) {
-        _rCube.RotateFace(Face.CubeVertical, prime);
+        _rCube.RotateFace(Face.CubeX, prime);
     }
     
     public void RotateCubeHorizontal(bool prime) {
-        _rCube.RotateFace(Face.CubeHorizontal, prime);
+        _rCube.RotateFace(Face.CubeY, prime);
     }
 
 
@@ -196,15 +196,15 @@ public class ControlButtons : MonoBehaviour
     }
 
     public void RotateHorizontal(bool prime) {
-        _rCube.RotateFace(Face.Horizontal, prime);
+        _rCube.RotateFace(Face.Equator, prime);
     }
 
     public void RotateVertical(bool prime) {
-        _rCube.RotateFace(Face.Vertical, prime);
+        _rCube.RotateFace(Face.Middle, prime);
     }
 
     public void RotateParallel(bool prime) {
-        _rCube.RotateFace(Face.Parallel, prime);
+        _rCube.RotateFace(Face.Standing, prime);
     }
 
 }
