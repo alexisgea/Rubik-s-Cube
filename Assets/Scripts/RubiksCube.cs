@@ -2,25 +2,47 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//
+// IDEAS - TODOS
+//
 
-// IDEAS
-// When moving, push the cam/cube slightly on the side to give some impact
-// add some more smoothing and variance to the rols
-// add key shortcut for solving the cube (need back, rings and cube flip)
-// add personalisable keys (and settings for sounds, speed and such)
-// add a leaderboard and timers
-// add sounds
-// make a nicer cube
-// add a nice background
-// add ring highlights on button
-// add mouse movements with ring highlights
-// add controller support with vibration
 // add press space to start timer
+// add a leaderboard and timers
 // add gold star for current record and grey start for past record
-// add better lookaround
 
 // add double key press handling
 // add double layer turns (lower cases)
+
+// add key shortcut for solving the cube (need back, rings and cube flip)
+// add personalisable keys (and settings for sounds, speed and such)
+
+// add better lookaround -> improve vertical still
+
+// When moving, push the cam/cube slightly on the side to give some impact
+// add some more smoothing and variance to the rols
+// add sounds -> more
+// make a nicer cube
+// add a nice background -> sky box, maybe a table?
+
+// add ring highlights on button hover
+// add mouse movements with ring highlights
+
+// add controller support with vibration
+
+
+// LEADERBOARD CONCEPT
+// to start a ranked solve
+// you notify the server you want to start
+// the server sends you a shuffle and your id and keeps track of the id + time + shuffle
+// On reception, you will be given 15 seconds before the sovle starts
+// the game will lock controls during the 15 seconds
+// then you can start the solve and the timer will start automatically
+// on solve it will send to the server your id, your moves and your time
+// the server will check that your moves do result in a solve
+// if you time is close to the server time, it will accept your time (so it's nicer for you)
+// maybe the server will check the ping response time at each exchange and use that as a variable to check the validity of your time
+// it will aslo do a sum of the moves with the turning speed of the game as the bottom line for the tsolve time
+
 
 public enum Face {Up, Front, Right, Back, Left, Down, Equator, Middle, Standing, CubeY, CubeX, CubeZ}
 
