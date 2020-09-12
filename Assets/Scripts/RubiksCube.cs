@@ -50,52 +50,57 @@ public enum Face {Up, Front, Right, Back, Left, Down, Equator, Middle, Standing,
 public struct FaceMove {
     public Face Face;
     public bool Prime;
+    public bool Double;
     public float Remaining;
     public bool Hidden;
     public bool Log;
 
     public override string ToString() {
+        string notation = "";
+
         switch (this.Face)
         {
             case Face.Up:
-                return this.Prime ? "U'" : "U";
+                notation = "U"; break;
 
             case Face.Down:
-                return this.Prime ? "D'" : "D";
+                notation = "D"; break;
 
             case Face.Right:
-                return this.Prime ? "R'" : "R";
+                notation = "R"; break;
 
             case Face.Left:
-                return this.Prime ? "L'" : "L";
+                notation = "L"; break;
 
             case Face.Front:
-                return this.Prime ? "F'" : "F";
+                notation = "F"; break;
 
             case Face.Back:
-                return this.Prime ? "B'" : "B";
+                notation = "B"; break;
 
             case Face.Equator:
-                return this.Prime ? "E'" : "E";
+                notation = "E"; break;
 
             case Face.Middle:
-                return this.Prime ? "M'" : "M";
+                notation = "M"; break;
 
             case Face.Standing:
-                return this.Prime ? "S'" : "S";
+                notation = "S"; break;
 
             case Face.CubeY:
-                return this.Prime ? "Y'" : "Y";
+                notation = "Y"; break;
 
             case Face.CubeX:
-                return this.Prime ? "X'" : "X";
+                notation = "X"; break;
 
             case Face.CubeZ:
-                return this.Prime ? "Z'" : "Z";
-
-            default:
-                return "";
+                notation = "Z"; break;
         }
+
+        if(this.Double) notation += "2";
+        else if(this.Prime) notation += "'";
+
+        return notation;
     }
 }
 
@@ -109,8 +114,8 @@ public class RubiksCube : MonoBehaviour
 
 
 
-    private FaceMove _currentMove;
-    private Queue<FaceMove> _plannedMoves = new Queue<FaceMove>();
+    // private FaceMove _currentMove;
+    private List<FaceMove> _plannedMoves = new List<FaceMove>();
     public FaceMove[] PreviousMoves {get { return _previousMoves.ToArray(); }}
     private Stack<FaceMove> _previousMoves = new Stack<FaceMove>();
     private Stack<FaceMove> _shuffleMoves = new Stack<FaceMove>();
@@ -182,10 +187,41 @@ public class RubiksCube : MonoBehaviour
     private int[] _vrRingMiddleInd = new int[12] {46, 49, 52, 34, 31, 28, 1, 4, 7, 10, 13, 16};
     private int[] _vrRingParallelInd = new int[12] {48, 49, 50, 25, 22, 19, 5, 4, 3, 37, 40, 43};
 
+    public void RotateFace(Face face, bool prime, bool alreadyDouble = false, bool hidden = false, bool log = true) {
 
+        // same move, so we should double (ongoing move is ok as we can jsut add to the remaining turn to do)
+        if(_plannedMoves.Count > 0 && !_plannedMoves[_plannedMoves.Count -1].Double && _plannedMoves[_plannedMoves.Count -1].Face == face && _plannedMoves[_plannedMoves.Count -1].Prime == prime) {
+            
+            var move = _plannedMoves[_plannedMoves.Count -1];
+            move.Remaining += 90f;
+            move.Double = true;
+            _plannedMoves[_plannedMoves.Count -1] = move;
 
-    public void RotateFace(Face face, bool prime, bool hidden = false, bool log = true) {
-        _plannedMoves.Enqueue(new FaceMove(){Face = face, Prime = prime, Remaining = 90f, Hidden = hidden, Log = log});
+            // same move but on a currently happening move, so we need to process it once more
+            if(_plannedMoves.Count == 1) {
+                ProcessQuarterMove(move);
+                if(move.Hidden && move.Log){
+                    var tempMove = _shuffleMoves.Pop();
+                    tempMove.Double = true;
+                    tempMove.Remaining = 180f;
+                    _shuffleMoves.Push(tempMove);
+                }
+                else if(move.Log){
+                    var tempMove = _previousMoves.Pop();
+                    tempMove.Double = true;
+                    tempMove.Remaining = 180f;
+                    _previousMoves.Push(tempMove);
+                }
+            } 
+        }
+        // // move inverse so we can remove (only if it's not the ongoing current move as we want to avoid mid - rotation bugs)
+        // else if(_plannedMoves.Count > 1 && _plannedMoves[_plannedMoves.Count -1].Face == face && _plannedMoves[_plannedMoves.Count -1].Prime != prime) {
+        //     _plannedMoves.RemoveAt(_plannedMoves.Count -1);
+        // }
+        // // normal move
+        else {
+            _plannedMoves.Add(new FaceMove(){Face = face, Prime = prime, Remaining = alreadyDouble ? 180f : 90f, Double = alreadyDouble, Hidden = hidden, Log = log});
+        }
     }
 
     public void ReverseAll() {
@@ -199,7 +235,7 @@ public class RubiksCube : MonoBehaviour
 
         foreach (var move in moves)
         {
-            RotateFace(move.Face, !move.Prime, log:false);
+            RotateFace(move.Face, !move.Prime, alreadyDouble:move.Double, log:false);
         }
 
         if(_previousMoves.Count == 0) _shuffleMoves.Clear();
@@ -210,7 +246,7 @@ public class RubiksCube : MonoBehaviour
         _plannedMoves.Clear();
         if(_previousMoves.Count > 0) {
             var moveToReverse = _previousMoves.Pop();
-            RotateFace(moveToReverse.Face, !moveToReverse.Prime, log:false);
+            RotateFace(moveToReverse.Face, !moveToReverse.Prime, alreadyDouble:moveToReverse.Double, log:false);
         }
     }
 
@@ -231,17 +267,25 @@ public class RubiksCube : MonoBehaviour
 
     private void Update() {
 
-        if(_currentMove.Remaining > 0) {
-            var cubeIndexes = GetPhysicalFaceCubeIndexes(_currentMove.Face);
-            var rotationAxis = GetRotationAxis(_currentMove);
+        if(_plannedMoves.Count > 0 && _plannedMoves[0].Remaining > 0) {
+
+
+            var move = _plannedMoves[0];
+
+            if((!move.Double && move.Remaining == 90f )|| (move.Double && move.Remaining == 180f)) NewMoveStarted(move);
+
+            var cubeIndexes = GetPhysicalFaceCubeIndexes(move.Face);
+            var rotationAxis = GetRotationAxis(move);
             var worldAxis = transform.TransformDirection(rotationAxis);
 
-            var rotation = Mathf.Lerp(0, _currentMove.Remaining + _rotationLerpOffset, _rotationSpeed * Time.deltaTime);
+            var rotation = Mathf.Lerp(0, move.Remaining + _rotationLerpOffset, _rotationSpeed * Time.deltaTime);
 
-            if(rotation < _rotationThreashold || rotation > _currentMove.Remaining) {
-                rotation = _currentMove.Remaining;
+            if(rotation < _rotationThreashold || rotation > move.Remaining) {
+                rotation = move.Remaining;
             }
-            _currentMove.Remaining -= rotation;
+
+            move.Remaining -= rotation;
+            _plannedMoves[0] = move;
 
             foreach (var i in cubeIndexes)
             {
@@ -249,70 +293,17 @@ public class RubiksCube : MonoBehaviour
                 _physicalCube[i].transform.Rotate(localAxis, rotation);
             }
 
-            // TODO don't clear all on solve
-            if(_currentMove.Remaining == 0 && IsSolved()) {
-                Debug.LogWarning("Solved!");
-                _plannedMoves.Clear();
-                _previousMoves.Clear();
-                _shuffleMoves.Clear();
-            }
+            // // TODO don't clear all on solve
+            // if(_plannedMoves[0].Remaining == 0 && IsSolved()) {
+            //     Debug.LogWarning("Solved!");
+            //     _plannedMoves.Clear();
+            //     _previousMoves.Clear();
+            //     _shuffleMoves.Clear();
+            // }
         }
 
-        if(_currentMove.Remaining <= 0 && _plannedMoves.Count > 0) {
-            _currentMove = _plannedMoves.Dequeue();
-
-            if(_currentMove.Face == Face.CubeY || _currentMove.Face == Face.CubeX) {
-                _audioSource.PlayOneShot(_flipSounds[Random.Range(0, _flipSounds.Length)]);
-            }
-            else {
-                _audioSource.PlayOneShot(_turnSounds[Random.Range(0, _turnSounds.Length)]);
-            }
-
-            // Perhaps this should be moved to the end or middle of the physical move?t
-            if(_currentMove.Face == Face.Equator || _currentMove.Face == Face.Middle || _currentMove.Face == Face.Standing) {
-                // ring rotation
-                PhysicalFaceRotaiton(_currentMove.Face, _currentMove.Prime);
-                VirtualRingRotation(GetVituralRingIndexes(_currentMove.Face), _currentMove.Prime);
-            }
-            else if(_currentMove.Face == Face.CubeY) {
-                // horizontal cube rotation
-                PhysicalFaceRotaiton(Face.Up, _currentMove.Prime);
-                PhysicalFaceRotaiton(Face.Equator, _currentMove.Prime);
-                PhysicalFaceRotaiton(Face.Down, !_currentMove.Prime);
-
-                VirtualFaceRotation(Face.Up, _currentMove.Prime);
-                VirtualRingRotation(GetVituralRingIndexes(Face.Equator), _currentMove.Prime);
-                VirtualFaceRotation(Face.Down, !_currentMove.Prime);
-            }
-            else if(_currentMove.Face == Face.CubeX) {
-                // vertical cube rotation
-                PhysicalFaceRotaiton(Face.Right, _currentMove.Prime);
-                PhysicalFaceRotaiton(Face.Middle, _currentMove.Prime);
-                PhysicalFaceRotaiton(Face.Left, !_currentMove.Prime);
-
-                VirtualFaceRotation(Face.Right, _currentMove.Prime);
-                VirtualRingRotation(GetVituralRingIndexes(Face.Middle), _currentMove.Prime);
-                VirtualFaceRotation(Face.Left, !_currentMove.Prime);
-            }
-            else if(_currentMove.Face == Face.CubeZ) {
-                // vertical cube rotation
-                PhysicalFaceRotaiton(Face.Front, _currentMove.Prime);
-                PhysicalFaceRotaiton(Face.Standing, _currentMove.Prime);
-                PhysicalFaceRotaiton(Face.Back, !_currentMove.Prime);
-
-                VirtualFaceRotation(Face.Front, _currentMove.Prime);
-                VirtualRingRotation(GetVituralRingIndexes(Face.Standing), _currentMove.Prime);
-                VirtualFaceRotation(Face.Back, !_currentMove.Prime);
-            }
-            else {
-                // standard rotation
-                PhysicalFaceRotaiton(_currentMove.Face, _currentMove.Prime);
-                VirtualFaceRotation(_currentMove.Face, _currentMove.Prime);
-            }
-
-
-            if(_currentMove.Hidden && _currentMove.Log) _shuffleMoves.Push(_currentMove);
-            else if(_currentMove.Log) _previousMoves.Push(_currentMove);
+        if(_plannedMoves.Count > 0 && _plannedMoves[0].Remaining == 0) {
+            _plannedMoves.RemoveAt(0);
         }
     }
 
@@ -327,6 +318,72 @@ public class RubiksCube : MonoBehaviour
         }
 
         return true;
+    }
+
+
+    // a double move should have a slightly different sound and a faster animation (than two seperate move)
+    // we need to properly process double moves
+    // if a new move is the same as the last move we change the last move to be a double move
+    // if 
+
+
+    private void NewMoveStarted(FaceMove move) {
+        if(move.Face == Face.CubeY || move.Face == Face.CubeX) {
+            _audioSource.PlayOneShot(_flipSounds[Random.Range(0, _flipSounds.Length)]);
+        }
+        else {
+            _audioSource.PlayOneShot(_turnSounds[Random.Range(0, _turnSounds.Length)]);
+        }
+
+        // Perhaps this should be moved to the end or middle of the physical move?t
+        ProcessQuarterMove(move);
+        if(move.Double) ProcessQuarterMove(move);
+        
+        if(move.Hidden && move.Log) _shuffleMoves.Push(move);
+        else if(move.Log) _previousMoves.Push(move);
+    }
+
+    private void ProcessQuarterMove(FaceMove move) {
+        if(move.Face == Face.Equator || move.Face == Face.Middle || move.Face == Face.Standing) {
+            // ring rotation
+            PhysicalFaceRotaiton(move.Face, move.Prime);
+            VirtualRingRotation(GetVituralRingIndexes(move.Face), move.Prime);
+        }
+        else if(move.Face == Face.CubeY) {
+            // horizontal cube rotation
+            PhysicalFaceRotaiton(Face.Up, move.Prime);
+            PhysicalFaceRotaiton(Face.Equator, move.Prime);
+            PhysicalFaceRotaiton(Face.Down, !move.Prime);
+
+            VirtualFaceRotation(Face.Up, move.Prime);
+            VirtualRingRotation(GetVituralRingIndexes(Face.Equator), move.Prime);
+            VirtualFaceRotation(Face.Down, !move.Prime);
+        }
+        else if(move.Face == Face.CubeX) {
+            // vertical cube rotation
+            PhysicalFaceRotaiton(Face.Right, move.Prime);
+            PhysicalFaceRotaiton(Face.Middle, move.Prime);
+            PhysicalFaceRotaiton(Face.Left, !move.Prime);
+
+            VirtualFaceRotation(Face.Right, move.Prime);
+            VirtualRingRotation(GetVituralRingIndexes(Face.Middle), move.Prime);
+            VirtualFaceRotation(Face.Left, !move.Prime);
+        }
+        else if(move.Face == Face.CubeZ) {
+            // vertical cube rotation
+            PhysicalFaceRotaiton(Face.Front, move.Prime);
+            PhysicalFaceRotaiton(Face.Standing, move.Prime);
+            PhysicalFaceRotaiton(Face.Back, !move.Prime);
+
+            VirtualFaceRotation(Face.Front, move.Prime);
+            VirtualRingRotation(GetVituralRingIndexes(Face.Standing), move.Prime);
+            VirtualFaceRotation(Face.Back, !move.Prime);
+        }
+        else {
+            // standard rotation
+            PhysicalFaceRotaiton(move.Face, move.Prime);
+            VirtualFaceRotation(move.Face, move.Prime);
+        }
     }
 
     private Vector3 GetRotationAxis(FaceMove rotation) {
