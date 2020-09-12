@@ -6,12 +6,33 @@ using System.Linq;
 using System.Text;
 
 
+// Timer Flow
+
+// you can shuffle and test solve without anything happening
+// in this case the shuffle moves are not hidden
+// You can reset the cube at anytime
+// if you solve the cube, it will write SOLVED but not clean the moves
+// 
+// then if you click start ranked solve it will reset the cube
+// then it will shuffle and hide the moves -> the speed should be super fast and probably the faces should be dark
+// then it will provide you with a 15 second timer during which you can look at the cube only (and not move anything)
+// then it will start the timer and you can solve the cube
+// the timer will stop itself when it is solved
+// you can stop at anytime which will reset the cube
+
+
 public class ControlButtons : MonoBehaviour
 {
     [SerializeField] Text _moves;
     [SerializeField] Transform _cubeMapParent;
     [SerializeField] Transform _cubeParent;
+    [SerializeField] Text _timerBox;
     
+
+    private float _prepTime = 15f;
+    private float _prepLeft = 0f;
+    private float _timer = 0f;
+
 
     private RubiksCube _rCube;
     private Image[] _cubeMap;
@@ -26,6 +47,8 @@ public class ControlButtons : MonoBehaviour
 
     private Color[] _faceColors = new Color[6] {Color.white, new Color(1, 0.5f, 0, 1), Color.green, Color.red, new Color(0, 0.5f, 1, 1), Color.yellow};
     private string _space = "  ";
+
+
 
     private void Start() {
         _startCubeParentRotation = _cubeParent.localRotation;

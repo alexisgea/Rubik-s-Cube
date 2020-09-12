@@ -19,6 +19,7 @@ using UnityEngine;
 // add better lookaround -> improve vertical still
 
 // When moving, push the cam/cube slightly on the side to give some impact
+// Add a satisfying win sound with a nice SOLVED
 // add some more smoothing and variance to the rols
 // add sounds -> more
 // make a nicer cube
