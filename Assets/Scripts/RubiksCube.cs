@@ -10,9 +10,7 @@ using UnityEngine;
 // add a leaderboard and timers
 // add gold star for current record and grey start for past record
 
-// add double key press handling
 // add double layer turns (lower cases)
-
 // add key shortcut for solving the cube (need back, rings and cube flip)
 // add personalisable keys (and settings for sounds, speed and such)
 
@@ -29,6 +27,11 @@ using UnityEngine;
 // add mouse movements with ring highlights
 
 // add controller support with vibration
+
+
+
+// NOTE
+// get shuffle as string and process it
 
 
 // LEADERBOARD CONCEPT
@@ -53,6 +56,7 @@ public struct FaceMove {
     public bool Double;
     public float Remaining;
     public bool Hidden;
+    public bool Shuffle;
     public bool Log;
 
     public override string ToString() {
@@ -115,9 +119,11 @@ public class RubiksCube : MonoBehaviour
 
 
     // private FaceMove _currentMove;
+    public FaceMove[] PlannedMoves {get { return _plannedMoves.ToArray(); }}
     private List<FaceMove> _plannedMoves = new List<FaceMove>();
     public FaceMove[] PreviousMoves {get { return _previousMoves.ToArray(); }}
     private Stack<FaceMove> _previousMoves = new Stack<FaceMove>();
+    public FaceMove[] ShuffleMoves {get { return _shuffleMoves.ToArray(); }}
     private Stack<FaceMove> _shuffleMoves = new Stack<FaceMove>();
 
     private float _rotationThreashold = 0.1f;
@@ -148,8 +154,8 @@ public class RubiksCube : MonoBehaviour
     private int[] _phLeftFaceInd = new int[] {0, 3, 6, 9, 12, 15, 18, 21, 24};
     private int[] _phDownFaceInd = new int[] {24, 25, 26, 21, 22, 23, 18, 19, 20};
 
-    private int[] _phEquatorLayerInd = new int[] {9, 10, 11, 12, 13, 14, 15, 16, 17};
-    private int[] _phMiddleLayerInd = new int[] {7, 4, 1, 16, 13, 10, 25, 22, 19};
+    private int[] _phEquatorLayerInd = new int[] {11, 10, 9, 14, 13, 12, 17, 16, 15};
+    private int[] _phMiddleLayerInd = new int[] {1, 4, 7, 10, 13, 16, 19, 22, 25};
     private int[] _phStandingLayerInd = new int[] {3, 4, 5, 12, 13, 14, 21, 22, 23};
     private int[] _phAllIndexes = new int[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
         14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26};
@@ -183,14 +189,15 @@ public class RubiksCube : MonoBehaviour
     private int[] _vrRingLeftInd = new int[12] {51, 48, 45, 15, 12, 9, 6, 3, 0, 29, 32, 35};
     private int[] _vrRingDownInd = new int[12] {35, 34, 33, 26, 25, 24, 17, 16, 15, 44, 43, 42};
 
-    private int[] _vrRingEquatorInd = new int[12] {12, 13, 14, 21, 22, 23, 30, 31, 32, 39, 40, 41};
-    private int[] _vrRingMiddleInd = new int[12] {46, 49, 52, 34, 31, 28, 1, 4, 7, 10, 13, 16};
+    private int[] _vrRingEquatorInd = new int[12] {41, 40, 39, 32, 31, 30, 23, 22, 21, 14, 13, 12};
+    private int[] _vrRingMiddleInd = new int[12] {16, 13, 10, 7, 4, 1, 28, 31, 34, 52, 49, 46};
     private int[] _vrRingParallelInd = new int[12] {48, 49, 50, 25, 22, 19, 5, 4, 3, 37, 40, 43};
 
-    public void RotateFace(Face face, bool prime, bool alreadyDouble = false, bool hidden = false, bool log = true) {
+    public void RotateFace(Face face, bool prime, bool alreadyDouble = false, bool shuffle = false, bool hidden = false, bool log = true) {
 
         // same move, so we should double (ongoing move is ok as we can jsut add to the remaining turn to do)
-        if(_plannedMoves.Count > 0 && !_plannedMoves[_plannedMoves.Count -1].Double && _plannedMoves[_plannedMoves.Count -1].Face == face && _plannedMoves[_plannedMoves.Count -1].Prime == prime) {
+        if(_plannedMoves.Count > 0 && !_plannedMoves[_plannedMoves.Count -1].Double &&
+            _plannedMoves[_plannedMoves.Count -1].Face == face && _plannedMoves[_plannedMoves.Count -1].Prime == prime) {
             
             var move = _plannedMoves[_plannedMoves.Count -1];
             move.Remaining += 90f;
@@ -200,7 +207,7 @@ public class RubiksCube : MonoBehaviour
             // same move but on a currently happening move, so we need to process it once more
             if(_plannedMoves.Count == 1) {
                 ProcessQuarterMove(move);
-                if(move.Hidden && move.Log){
+                if(move.Shuffle && move.Log){
                     var tempMove = _shuffleMoves.Pop();
                     tempMove.Double = true;
                     tempMove.Remaining = 180f;
@@ -220,27 +227,39 @@ public class RubiksCube : MonoBehaviour
         // }
         // // normal move
         else {
-            _plannedMoves.Add(new FaceMove(){Face = face, Prime = prime, Remaining = alreadyDouble ? 180f : 90f, Double = alreadyDouble, Hidden = hidden, Log = log});
+            _plannedMoves.Add(new FaceMove(){Face = face, Prime = prime, Remaining = alreadyDouble ? 180f : 90f, Double = alreadyDouble, Shuffle = shuffle, Hidden = hidden, Log = log});
         }
     }
 
     public void ReverseAll() {
+        if(IsSolved()) {
+            _plannedMoves.Clear();
+            _previousMoves.Clear();
+            _shuffleMoves.Clear();
+        }
+        else {
+            ReverseManualMoves();
+            ReverseShuffleMoves();
+        }
+    }
+
+    public void ReverseToShuffle() {
+        ReverseManualMoves();
+    }
+
+    public void ReverseManualMoves() {
         _plannedMoves.Clear();
 
         var moves = _previousMoves;
-
-        if(_previousMoves.Count == 0) {
-            moves = _shuffleMoves;
-        }
 
         foreach (var move in moves)
         {
             RotateFace(move.Face, !move.Prime, alreadyDouble:move.Double, log:false);
         }
 
-        if(_previousMoves.Count == 0) _shuffleMoves.Clear();
         _previousMoves.Clear();
     }
+
 
     public void ReverseLast() {
         _plannedMoves.Clear();
@@ -248,6 +267,18 @@ public class RubiksCube : MonoBehaviour
             var moveToReverse = _previousMoves.Pop();
             RotateFace(moveToReverse.Face, !moveToReverse.Prime, alreadyDouble:moveToReverse.Double, log:false);
         }
+    }
+
+    public bool IsSolved() {
+        for(int f = 0; f < 6; f++) {
+            int f_p = f * 9;
+            int valCheck = _virtualCube[f_p];
+            for(int i = 0; i < 9; i++) {
+                if(_virtualCube[f_p + i] != valCheck) return false;
+            }
+        }
+
+        return true;
     }
 
 
@@ -292,14 +323,6 @@ public class RubiksCube : MonoBehaviour
                 var localAxis = _physicalCube[i].transform.InverseTransformDirection(worldAxis);
                 _physicalCube[i].transform.Rotate(localAxis, rotation);
             }
-
-            // // TODO don't clear all on solve
-            // if(_plannedMoves[0].Remaining == 0 && IsSolved()) {
-            //     Debug.LogWarning("Solved!");
-            //     _plannedMoves.Clear();
-            //     _previousMoves.Clear();
-            //     _shuffleMoves.Clear();
-            // }
         }
 
         if(_plannedMoves.Count > 0 && _plannedMoves[0].Remaining == 0) {
@@ -307,17 +330,15 @@ public class RubiksCube : MonoBehaviour
         }
     }
 
+    private void ReverseShuffleMoves() {
+        var moves = _shuffleMoves;
 
-    private bool IsSolved() {
-        for(int f = 0; f < 6; f++) {
-            int f_p = f * 9;
-            int valCheck = _virtualCube[f_p];
-            for(int i = 0; i < 9; i++) {
-                if(_virtualCube[f_p + i] != valCheck) return false;
-            }
+        foreach (var move in moves)
+        {
+            RotateFace(move.Face, !move.Prime, alreadyDouble:move.Double, log:false);
         }
 
-        return true;
+        _shuffleMoves.Clear();
     }
 
 
@@ -339,41 +360,41 @@ public class RubiksCube : MonoBehaviour
         ProcessQuarterMove(move);
         if(move.Double) ProcessQuarterMove(move);
         
-        if(move.Hidden && move.Log) _shuffleMoves.Push(move);
+        if(move.Shuffle && move.Log) _shuffleMoves.Push(move);
         else if(move.Log) _previousMoves.Push(move);
     }
 
     private void ProcessQuarterMove(FaceMove move) {
         if(move.Face == Face.Equator || move.Face == Face.Middle || move.Face == Face.Standing) {
             // ring rotation
-            PhysicalFaceRotaiton(move.Face, move.Prime);
+            PhysicalFaceRotation(move.Face, move.Prime);
             VirtualRingRotation(GetVituralRingIndexes(move.Face), move.Prime);
         }
         else if(move.Face == Face.CubeY) {
             // horizontal cube rotation
-            PhysicalFaceRotaiton(Face.Up, move.Prime);
-            PhysicalFaceRotaiton(Face.Equator, move.Prime);
-            PhysicalFaceRotaiton(Face.Down, !move.Prime);
+            PhysicalFaceRotation(Face.Up, move.Prime);
+            PhysicalFaceRotation(Face.Equator, !move.Prime);
+            PhysicalFaceRotation(Face.Down, !move.Prime);
 
             VirtualFaceRotation(Face.Up, move.Prime);
-            VirtualRingRotation(GetVituralRingIndexes(Face.Equator), move.Prime);
+            VirtualRingRotation(GetVituralRingIndexes(Face.Equator), !move.Prime);
             VirtualFaceRotation(Face.Down, !move.Prime);
         }
         else if(move.Face == Face.CubeX) {
             // vertical cube rotation
-            PhysicalFaceRotaiton(Face.Right, move.Prime);
-            PhysicalFaceRotaiton(Face.Middle, move.Prime);
-            PhysicalFaceRotaiton(Face.Left, !move.Prime);
+            PhysicalFaceRotation(Face.Right, move.Prime);
+            PhysicalFaceRotation(Face.Middle, !move.Prime);
+            PhysicalFaceRotation(Face.Left, !move.Prime);
 
             VirtualFaceRotation(Face.Right, move.Prime);
-            VirtualRingRotation(GetVituralRingIndexes(Face.Middle), move.Prime);
+            VirtualRingRotation(GetVituralRingIndexes(Face.Middle), !move.Prime);
             VirtualFaceRotation(Face.Left, !move.Prime);
         }
         else if(move.Face == Face.CubeZ) {
             // vertical cube rotation
-            PhysicalFaceRotaiton(Face.Front, move.Prime);
-            PhysicalFaceRotaiton(Face.Standing, move.Prime);
-            PhysicalFaceRotaiton(Face.Back, !move.Prime);
+            PhysicalFaceRotation(Face.Front, move.Prime);
+            PhysicalFaceRotation(Face.Standing, move.Prime);
+            PhysicalFaceRotation(Face.Back, !move.Prime);
 
             VirtualFaceRotation(Face.Front, move.Prime);
             VirtualRingRotation(GetVituralRingIndexes(Face.Standing), move.Prime);
@@ -381,7 +402,7 @@ public class RubiksCube : MonoBehaviour
         }
         else {
             // standard rotation
-            PhysicalFaceRotaiton(move.Face, move.Prime);
+            PhysicalFaceRotation(move.Face, move.Prime);
             VirtualFaceRotation(move.Face, move.Prime);
         }
     }
@@ -437,7 +458,8 @@ public class RubiksCube : MonoBehaviour
         }
     }
 
-    private void PhysicalFaceRotaiton(Face face, bool prime) {
+
+    private void PhysicalFaceRotation(Face face, bool prime) {
         SmallCube[] tempFaceCubes = new SmallCube[9];
         var faceCubeIndexes = GetPhysicalFaceCubeIndexes(face);
 

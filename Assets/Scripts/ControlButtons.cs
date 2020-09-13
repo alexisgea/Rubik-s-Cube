@@ -21,16 +21,30 @@ using System.Text;
 // you can stop at anytime which will reset the cube
 
 
+public enum ControlPhase {Idle, Suffling, Prepping, Solving, Solved}
 public class ControlButtons : MonoBehaviour
 {
     [SerializeField] Text _moves;
     [SerializeField] Transform _cubeMapParent;
     [SerializeField] Transform _cubeParent;
+    [SerializeField] Transform _cylinder;
     [SerializeField] Text _timerBox;
+    [SerializeField] GameObject _solvePanel;
+    [SerializeField] Transform[] _locakbleButtonGroups;
+
+    private Vector3 _cylinderDefaultPosition = new Vector3(0, 10, 0);
+    private Vector3 _cylinderHidePosition = new Vector3(0, 0.3f, 0);
+
+
+    private bool _controlLocked = false;
+    private bool _shuffling = false;
+    private bool _solving = false;
+    private bool _prepping = false;
+    private bool _casual = true;
+
     
 
     private float _prepTime = 15f;
-    private float _prepLeft = 0f;
     private float _timer = 0f;
 
 
@@ -76,12 +90,34 @@ public class ControlButtons : MonoBehaviour
 
         // updating move text
         StringBuilder moves = new StringBuilder();
+
+        if((_rCube.ShuffleMoves.Length > 0 && !_rCube.ShuffleMoves[0].Hidden || _rCube.ShuffleMoves.Length == 0)) {
+            moves.AppendLine($"Shuffle: {_rCube.ShuffleMoves.Length}");
+            foreach (var move in _rCube.ShuffleMoves.Reverse())
+            {
+                moves.Append(move.ToString());
+                moves.Append(_space);
+            }
+        }
+        else {
+            moves.AppendLine("Shuffle: Hidden");
+        }
+
+        moves.AppendLine("");
+
+        moves.AppendLine($"Solve: {_rCube.PreviousMoves.Length}");
         foreach (var move in _rCube.PreviousMoves.Reverse())
         {
             moves.Append(move.ToString());
             moves.Append(_space);
         }
         _moves.text = moves.ToString();
+
+
+        // cube map coloring
+        for(int i = 0; i < _cubeMap.Length; i++) {
+            _cubeMap[i].color = _shuffling ? Color.black : _faceColors[_rCube.VirtualCube[i]];
+        }
 
         // cube look around
         var mousePosNormalized = new Vector3(Input.mousePosition.x / (float)Screen.width, Input.mousePosition.y / (float)Screen.height, 0);
@@ -104,66 +140,124 @@ public class ControlButtons : MonoBehaviour
             _rCube.transform.localRotation = Quaternion.Lerp(_rCube.transform.localRotation, _startCubeRotation, _cubeRotationResetSpeed * Time.deltaTime);
         }
 
-        // cube map coloring
-        for(int i = 0; i < _cubeMap.Length; i++) {
-            _cubeMap[i].color = _faceColors[_rCube.VirtualCube[i]];
+
+        if(_shuffling && _rCube.PlannedMoves.Length == 0) {
+            _shuffling = false;
+            _cylinder.gameObject.SetActive(false);
+        }
+        
+        // update solving state and control lock
+        if(_controlLocked && _rCube.PlannedMoves.Length == 0 && !_shuffling && !_prepping) {
+            _controlLocked = false;
+            ToggleButtonLock(_controlLocked);
         }
 
-        // keyboard controls
-        if(Input.GetKeyDown(KeyCode.U)) {
-            RotateUp(prime:false);
-        }
-        if(Input.GetKeyDown(KeyCode.R)) {
-            RotateUp(prime:true);
+        //update timer and text
+        if(_prepping && !_shuffling) {
+            _timer -= Time.deltaTime;
+
+            if(_timer <= 0) {
+                _timer = 0;
+                _prepping = false;
+                _solving = true;
+            }
         }
 
-        if(Input.GetKeyDown(KeyCode.J)) {
-            RotateFront(prime:false);
+        if(_solving && !_rCube.IsSolved()){
+            _timer += Time.deltaTime;
         }
-        if(Input.GetKeyDown(KeyCode.F)) {
-            RotateFront(prime:true);
+        _timerBox.text = System.TimeSpan.FromSeconds(_timer).ToString(@"mm\:ss\.fff");
+
+        // time-out if it's taking too long
+        if(_timer > 3600) {
+            Reset();
+        }
+        
+        // check solve status
+        bool solved = _solving && _rCube.IsSolved();
+        _solvePanel.SetActive(solved);
+
+        if(solved && !_controlLocked) {
+            _controlLocked = solved;
+            ToggleButtonLock(_controlLocked);
         }
 
-        if(Input.GetKeyDown(KeyCode.I)) {
-            RotateRight(prime:false);
-        }
-        if(Input.GetKeyDown(KeyCode.K)) {
-            RotateRight(prime:true);
-        }
-
-        if(Input.GetKeyDown(KeyCode.E)) {
-            RotateLeft(prime:false);
-        }
-        if(Input.GetKeyDown(KeyCode.D)) {
-            RotateLeft(prime:true);
-        }
-
-        if(Input.GetKeyDown(KeyCode.L)) {
-            RotateDown(prime:false);
-        }
-        if(Input.GetKeyDown(KeyCode.S)) {
-            RotateDown(prime:true);
+        if(solved && Input.GetMouseButtonDown(0)) {
+            Reset();
         }
 
 
+        // Key controls
+        if(!_controlLocked) {
+            // keyboard controls
+            if(Input.GetKeyDown(KeyCode.U)) {
+                RotateUp(prime:false);
+            }
+            if(Input.GetKeyDown(KeyCode.R)) {
+                RotateUp(prime:true);
+            }
 
-        if(Input.GetKeyDown(KeyCode.UpArrow)) {
-            RotateCubeVertical(prime:false);
-        }
-        if(Input.GetKeyDown(KeyCode.DownArrow)) {
-            RotateCubeVertical(prime:true);
-        }
+            if(Input.GetKeyDown(KeyCode.J)) {
+                RotateFront(prime:false);
+            }
+            if(Input.GetKeyDown(KeyCode.F)) {
+                RotateFront(prime:true);
+            }
 
-        if(Input.GetKeyDown(KeyCode.RightArrow)) {
-            RotateCubeHorizontal(prime:false);
+            if(Input.GetKeyDown(KeyCode.I)) {
+                RotateRight(prime:false);
+            }
+            if(Input.GetKeyDown(KeyCode.K)) {
+                RotateRight(prime:true);
+            }
+
+            if(Input.GetKeyDown(KeyCode.E)) {
+                RotateLeft(prime:false);
+            }
+            if(Input.GetKeyDown(KeyCode.D)) {
+                RotateLeft(prime:true);
+            }
+
+            if(Input.GetKeyDown(KeyCode.L)) {
+                RotateDown(prime:false);
+            }
+            if(Input.GetKeyDown(KeyCode.S)) {
+                RotateDown(prime:true);
+            }
+
+
+
+            if(Input.GetKeyDown(KeyCode.UpArrow)) {
+                RotateCubeVertical(prime:false);
+            }
+            if(Input.GetKeyDown(KeyCode.DownArrow)) {
+                RotateCubeVertical(prime:true);
+            }
+
+            if(Input.GetKeyDown(KeyCode.RightArrow)) {
+                RotateCubeHorizontal(prime:false);
+            }
+            if(Input.GetKeyDown(KeyCode.LeftArrow)) {
+                RotateCubeHorizontal(prime:true);
+            }
         }
-        if(Input.GetKeyDown(KeyCode.LeftArrow)) {
-            RotateCubeHorizontal(prime:true);
+    }
+
+    private void ToggleButtonLock(bool locked) {
+        foreach(var group in _locakbleButtonGroups) {
+            foreach(var button in group.GetComponentsInChildren<Button>()) {
+                button.interactable = !locked;
+            }
         }
     }
 
 
-    public void Shuffle() {
+    public void CasualShuffle() {
+        // _shuffling = true;
+        _controlLocked = true;
+        ToggleButtonLock(_controlLocked);
+
+        _rCube.ReverseAll();
 
         var lastMove = new FaceMove();
 
@@ -176,9 +270,37 @@ public class ControlButtons : MonoBehaviour
             }
             else {
                 lastMove = new FaceMove() {Face = face, Prime = prime};
-                _rCube.RotateFace(face, prime, hidden:true);
+                _rCube.RotateFace(face, prime, shuffle:true);
             }
         }
+    }
+
+    public void RankedShuffle() {
+        _cylinder.gameObject.SetActive(true);
+
+        _timer = _prepTime;
+        _prepping = true;
+        _shuffling = true;
+        _controlLocked = true;
+        ToggleButtonLock(_controlLocked);
+
+        _rCube.ReverseAll();
+
+        var lastMove = new FaceMove();
+
+        for(int i = 0; i < 20; i++) {
+            Face face = (Face)Random.Range(0, 6); // ignoring middle rings
+            bool prime = Random.value < 0.5f;
+
+            if(i > 0 && lastMove.Face == face && lastMove.Prime != prime) {
+                i -= 1;
+            }
+            else {
+                lastMove = new FaceMove() {Face = face, Prime = prime};
+                _rCube.RotateFace(face, prime, shuffle:true, hidden:true);
+            }
+        }
+
     }
 
     public void Back() {
@@ -191,6 +313,12 @@ public class ControlButtons : MonoBehaviour
 
     public void Reset() {
         _rCube.ReverseAll();
+        _solving = false;
+        _prepping = false;
+        // _shuffling = true;
+        _controlLocked = true;
+        ToggleButtonLock(_controlLocked);
+        _timer = 0;
     }
 
     public void RotateCubeVertical(bool prime) {
