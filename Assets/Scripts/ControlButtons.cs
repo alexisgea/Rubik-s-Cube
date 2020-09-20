@@ -6,9 +6,6 @@ using System.Linq;
 using System.Text;
 
 
-// Timer Flow
-
-
 // more notes
 // track time per solve step
 // track own best time and make difference with it
@@ -18,7 +15,10 @@ using System.Text;
 public enum ControlPhase {Idle, Suffling, Prepping, Solving, Solved}
 public class ControlButtons : MonoBehaviour
 {
-    [SerializeField] Text _moves;
+    [SerializeField] Text _shuffleMoves;
+    [SerializeField] Text _solveMoves;
+    [SerializeField] Text _plannedMoves;
+    [SerializeField] InputField _textInput;
     [SerializeField] Transform _cubeMapParent;
     [SerializeField] Transform _cubeParent;
     [SerializeField] Transform _cylinder;
@@ -34,7 +34,8 @@ public class ControlButtons : MonoBehaviour
     private bool _shuffling = false;
     private bool _solving = false;
     private bool _prepping = false;
-    private bool _casual = true;
+    // private bool _casual = true;
+    private bool _timing = false;
 
     
 
@@ -81,6 +82,9 @@ public class ControlButtons : MonoBehaviour
     }
 
     private void Update() {
+        
+        // we want to make sure we don't process key input when typing in the text box
+        _controlLocked = _textInput.isFocused || _shuffling;
 
         // updating move text
         UpdateMoveText();
@@ -88,7 +92,7 @@ public class ControlButtons : MonoBehaviour
 
         // cube map coloring
         for(int i = 0; i < _cubeMap.Length; i++) {
-            _cubeMap[i].color = _shuffling ? Color.black : _faceColors[_rCube.VirtualCube[i]];
+            _cubeMap[i].color = (_prepping && _shuffling) ? Color.black : _faceColors[_rCube.VirtualCube[i]];
         }
 
         // cube look around
@@ -119,7 +123,9 @@ public class ControlButtons : MonoBehaviour
         }
         
         // update solving state and control lock
-        if(_controlLocked && _rCube.PlannedMoves.Length == 0 && !_shuffling && !_prepping) {
+        bool unlock = _controlLocked && _rCube.PlannedMoves.Length == 0 && !_shuffling && !_prepping && !_textInput.isFocused;
+
+        if(unlock) {
             _controlLocked = false;
             ToggleButtonLock(_controlLocked);
         }
@@ -132,10 +138,16 @@ public class ControlButtons : MonoBehaviour
                 _timer = 0;
                 _prepping = false;
                 _solving = true;
+                _timing = true;
             }
         }
 
-        if(_solving && !_rCube.IsSolved()){
+
+        if(_solving && _rCube.IsSolved()){
+            _timing = false;
+        }
+
+        if(_timing) {
             _timer += Time.deltaTime;
         }
         _timerBox.text = System.TimeSpan.FromSeconds(_timer).ToString(@"mm\:ss\.fff");
@@ -162,6 +174,10 @@ public class ControlButtons : MonoBehaviour
         // Key controls
         if(!_controlLocked) {
             // keyboard controls
+            if(Input.GetKeyDown(KeyCode.Space) && !_solving) {
+                _timing = !_timing;
+            }
+
             if(Input.GetKeyDown(KeyCode.U)) {
                 RotateUp(prime:false);
             }
@@ -217,42 +233,46 @@ public class ControlButtons : MonoBehaviour
 
 
     private void UpdateMoveText() {
-        StringBuilder moves = new StringBuilder();
 
+        StringBuilder shuffleMoves = new StringBuilder();
         if((_rCube.ShuffleMoves.Length > 0 && !_rCube.ShuffleMoves[0].Hidden || _rCube.ShuffleMoves.Length == 0)) {
-            moves.AppendLine($"Shuffle: {_rCube.ShuffleMoves.Length}");
+            shuffleMoves.AppendLine($"Shuffle: {_rCube.ShuffleMoves.Length}");
             foreach (var move in _rCube.ShuffleMoves.Reverse())
             {
-                moves.Append(move.ToString());
-                moves.Append(_space);
+                shuffleMoves.Append(move.ToString());
+                shuffleMoves.Append(_space);
             }
         }
         else {
-            moves.AppendLine("Shuffle: Hidden");
+            shuffleMoves.AppendLine("Shuffle: Hidden");
         }
+        _shuffleMoves.text = shuffleMoves.ToString();
 
-        moves.AppendLine("");
+
+        StringBuilder moves = new StringBuilder();
         moves.AppendLine($"Solve: {_rCube.PreviousMoves.Length}");
         foreach (var move in _rCube.PreviousMoves.Reverse())
         {
             moves.Append(move.ToString());
             moves.Append(_space);
         }
+        _solveMoves.text = moves.ToString();
 
-        moves.AppendLine("");
+
+        StringBuilder plannedMoves = new StringBuilder();
         if((_rCube.PlannedMoves.Length > 0 && !_rCube.PlannedMoves[0].Hidden || _rCube.PlannedMoves.Length == 0)) {
-            moves.AppendLine($"Planned: {_rCube.PlannedMoves.Length}");
+            plannedMoves.AppendLine($"Planned: {_rCube.PlannedMoves.Length}");
             foreach (var move in _rCube.PlannedMoves)
             {
-                moves.Append(move.ToString());
-                moves.Append(_space);
+                plannedMoves.Append(move.ToString());
+                plannedMoves.Append(_space);
             }
         }
         else {
-            moves.AppendLine("Planned: Hidden");
+            plannedMoves.AppendLine("Planned: Hidden");
         }
+        _plannedMoves.text = plannedMoves.ToString();
 
-        _moves.text = moves.ToString();
     }
 
     private void ToggleButtonLock(bool locked) {
@@ -265,11 +285,13 @@ public class ControlButtons : MonoBehaviour
 
 
     public void CasualShuffle() {
-        // _shuffling = true;
-        _controlLocked = true;
-        ToggleButtonLock(_controlLocked);
+        // _controlLocked = true;
+        // ToggleButtonLock(_controlLocked);
 
-        _rCube.ReverseAll();
+        // _rCube.ReverseAll();
+
+        Reset();
+        _shuffling = true;
 
         var lastMove = new FaceMove();
 
@@ -312,7 +334,6 @@ public class ControlButtons : MonoBehaviour
                 _rCube.RotateFace(face, prime, shuffle:true, hidden:true);
             }
         }
-
     }
 
     public void Back() {
@@ -328,11 +349,45 @@ public class ControlButtons : MonoBehaviour
     public void Reset() {
         _rCube.ReverseAll();
         _solving = false;
+        _timing = false;
         _prepping = false;
-        // _shuffling = true;
+        _shuffling = false;
         _controlLocked = true;
         ToggleButtonLock(_controlLocked);
         _timer = 0;
+    }
+
+    public void UseTextInput() {
+        Reset();
+
+        _shuffling = true;
+
+        var moves = _rCube.ProcessInputString(_textInput.text);
+        foreach(var move in moves) {
+            _rCube.RotateFace(move.Face, move.Prime, alreadyDouble:move.Double, shuffle: true);
+        }
+
+        _textInput.text = "";
+    }
+
+    public void ClipboardShuffle() {
+        StringBuilder shuffleMoves = new StringBuilder();
+        foreach (var move in _rCube.ShuffleMoves.Reverse())
+        {
+            shuffleMoves.Append(move.ToString());
+            shuffleMoves.Append(_space);
+        }
+        GUIUtility.systemCopyBuffer = shuffleMoves.ToString();
+    }
+
+    public void CipboardMoves() {
+        StringBuilder moves = new StringBuilder();
+        foreach (var move in _rCube.PreviousMoves.Reverse())
+        {
+            moves.Append(move.ToString());
+            moves.Append(_space);
+        }
+        GUIUtility.systemCopyBuffer = moves.ToString();
     }
 
     public void RotateCubeVertical(bool prime) {

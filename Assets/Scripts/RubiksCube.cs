@@ -6,13 +6,12 @@ using UnityEngine;
 // IDEAS - TODOS
 //
 
-// add press space to start timer
 // add a leaderboard and timers
 // add gold star for current record and grey start for past record
 
-// add double layer turns (lower cases)
 // add key shortcut for solving the cube (need back, rings and cube flip)
 // add personalisable keys (and settings for sounds, speed and such)
+// add double layer turns (lower cases)
 
 // add better lookaround -> improve vertical still
 
@@ -192,6 +191,7 @@ public class RubiksCube : MonoBehaviour
     private int[] _vrRingMiddleInd = new int[12] {16, 13, 10, 7, 4, 1, 28, 31, 34, 52, 49, 46};
     private int[] _vrRingParallelInd = new int[12] {48, 49, 50, 25, 22, 19, 5, 4, 3, 37, 40, 43};
 
+
     public void RotateFace(Face face, bool prime, bool alreadyDouble = false, bool shuffle = false, bool hidden = false, bool log = true) {
 
         var newMove = new FaceMove(){Face = face, Prime = prime, Remaining = alreadyDouble ? 180f : 90f,
@@ -239,9 +239,6 @@ public class RubiksCube : MonoBehaviour
         else {
             _plannedMoves.Add(newMove);
         }
-
-
-
     }
 
     public void ReverseAll() {
@@ -292,6 +289,87 @@ public class RubiksCube : MonoBehaviour
         }
 
         return true;
+    }
+
+    public List<FaceMove> ProcessInputString(string inputs) {
+        List<FaceMove> moves = new List<FaceMove>();
+        var stringMoves = inputs.Split(' ');
+
+        foreach(var sm in stringMoves) {
+            var move = new FaceMove();
+            move.Shuffle = true;
+            move.Log = false;
+            move.Hidden = false;
+
+            bool valid = true;
+            
+            if(sm.Length == 0) {
+                continue;
+            }
+
+            // check face
+            if(sm[0] == 'R') {
+                move.Face = Face.Right;
+            }
+            else if(sm[0] == 'L') {
+                move.Face = Face.Left;
+            }
+            else if(sm[0] == 'U') {
+                move.Face = Face.Up;
+            }
+            else if(sm[0] == 'D') {
+                move.Face = Face.Down;
+            }
+            else if(sm[0] == 'B') {
+                move.Face = Face.Back;
+            }
+            else if(sm[0] == 'F') {
+                move.Face = Face.Front;
+            }
+            else if(sm[0] == 'E') {
+                move.Face = Face.Equator;
+            }
+            else if(sm[0] == 'S') {
+                move.Face = Face.Standing;
+            }
+            else if(sm[0] == 'M') {
+                move.Face = Face.Middle;
+            }
+            else if(sm[0] == 'X') {
+                move.Face = Face.CubeX;
+            }
+            else if(sm[0] == 'Y') {
+                move.Face = Face.CubeY;
+            }
+            else if(sm[0] == 'Z') {
+                move.Face = Face.CubeZ;
+            }
+            else {
+                valid = false;
+            }
+
+            // check prime
+            if(sm.Contains("'")) {
+                move.Prime = true;
+            }
+
+            // check double
+            if(sm.Contains("2")) {
+                move.Double = true;
+                move.Remaining = 180f;
+            }
+            else {
+                move.Remaining = 90f;
+            }
+
+            if(valid) {
+                moves.Add(move);
+            }
+            else{
+                Debug.LogError("Cannot identify move: " + sm);
+            }
+        }
+        return moves;
     }
 
 
