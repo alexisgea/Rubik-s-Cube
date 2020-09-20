@@ -8,17 +8,11 @@ using System.Text;
 
 // Timer Flow
 
-// you can shuffle and test solve without anything happening
-// in this case the shuffle moves are not hidden
-// You can reset the cube at anytime
-// if you solve the cube, it will write SOLVED but not clean the moves
-// 
-// then if you click start ranked solve it will reset the cube
-// then it will shuffle and hide the moves -> the speed should be super fast and probably the faces should be dark
-// then it will provide you with a 15 second timer during which you can look at the cube only (and not move anything)
-// then it will start the timer and you can solve the cube
-// the timer will stop itself when it is solved
-// you can stop at anytime which will reset the cube
+
+// more notes
+// track time per solve step
+// track own best time and make difference with it
+// enable ability to start timer during casula stuff
 
 
 public enum ControlPhase {Idle, Suffling, Prepping, Solving, Solved}
@@ -89,29 +83,7 @@ public class ControlButtons : MonoBehaviour
     private void Update() {
 
         // updating move text
-        StringBuilder moves = new StringBuilder();
-
-        if((_rCube.ShuffleMoves.Length > 0 && !_rCube.ShuffleMoves[0].Hidden || _rCube.ShuffleMoves.Length == 0)) {
-            moves.AppendLine($"Shuffle: {_rCube.ShuffleMoves.Length}");
-            foreach (var move in _rCube.ShuffleMoves.Reverse())
-            {
-                moves.Append(move.ToString());
-                moves.Append(_space);
-            }
-        }
-        else {
-            moves.AppendLine("Shuffle: Hidden");
-        }
-
-        moves.AppendLine("");
-
-        moves.AppendLine($"Solve: {_rCube.PreviousMoves.Length}");
-        foreach (var move in _rCube.PreviousMoves.Reverse())
-        {
-            moves.Append(move.ToString());
-            moves.Append(_space);
-        }
-        _moves.text = moves.ToString();
+        UpdateMoveText();
 
 
         // cube map coloring
@@ -243,6 +215,46 @@ public class ControlButtons : MonoBehaviour
         }
     }
 
+
+    private void UpdateMoveText() {
+        StringBuilder moves = new StringBuilder();
+
+        if((_rCube.ShuffleMoves.Length > 0 && !_rCube.ShuffleMoves[0].Hidden || _rCube.ShuffleMoves.Length == 0)) {
+            moves.AppendLine($"Shuffle: {_rCube.ShuffleMoves.Length}");
+            foreach (var move in _rCube.ShuffleMoves.Reverse())
+            {
+                moves.Append(move.ToString());
+                moves.Append(_space);
+            }
+        }
+        else {
+            moves.AppendLine("Shuffle: Hidden");
+        }
+
+        moves.AppendLine("");
+        moves.AppendLine($"Solve: {_rCube.PreviousMoves.Length}");
+        foreach (var move in _rCube.PreviousMoves.Reverse())
+        {
+            moves.Append(move.ToString());
+            moves.Append(_space);
+        }
+
+        moves.AppendLine("");
+        if((_rCube.PlannedMoves.Length > 0 && !_rCube.PlannedMoves[0].Hidden || _rCube.PlannedMoves.Length == 0)) {
+            moves.AppendLine($"Planned: {_rCube.PlannedMoves.Length}");
+            foreach (var move in _rCube.PlannedMoves)
+            {
+                moves.Append(move.ToString());
+                moves.Append(_space);
+            }
+        }
+        else {
+            moves.AppendLine("Planned: Hidden");
+        }
+
+        _moves.text = moves.ToString();
+    }
+
     private void ToggleButtonLock(bool locked) {
         foreach(var group in _locakbleButtonGroups) {
             foreach(var button in group.GetComponentsInChildren<Button>()) {
@@ -304,6 +316,8 @@ public class ControlButtons : MonoBehaviour
     }
 
     public void Back() {
+        _controlLocked = true;
+        ToggleButtonLock(_controlLocked);
         _rCube.ReverseLast();
     }
 

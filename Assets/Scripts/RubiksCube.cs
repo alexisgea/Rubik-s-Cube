@@ -17,17 +17,16 @@ using UnityEngine;
 // add better lookaround -> improve vertical still
 
 // When moving, push the cam/cube slightly on the side to give some impact
-// Add a satisfying win sound with a nice SOLVED
-// add some more smoothing and variance to the rols
-// add sounds -> more
+// Add a satisfying win sound with a nice SOLVED + time + leaderboard drop and camshake
+// add some more smoothing and variance to the rolls to feel more natural
 // make a nicer cube
 // add a nice background -> sky box, maybe a table?
+// add some background music  + sound ambiance?
 
 // add ring highlights on button hover
 // add mouse movements with ring highlights
 
 // add controller support with vibration
-
 
 
 // NOTE
@@ -118,7 +117,7 @@ public class RubiksCube : MonoBehaviour
 
 
 
-    // private FaceMove _currentMove;
+    private FaceMove _currentMove;
     public FaceMove[] PlannedMoves {get { return _plannedMoves.ToArray(); }}
     private List<FaceMove> _plannedMoves = new List<FaceMove>();
     public FaceMove[] PreviousMoves {get { return _previousMoves.ToArray(); }}
@@ -195,40 +194,54 @@ public class RubiksCube : MonoBehaviour
 
     public void RotateFace(Face face, bool prime, bool alreadyDouble = false, bool shuffle = false, bool hidden = false, bool log = true) {
 
-        // same move, so we should double (ongoing move is ok as we can jsut add to the remaining turn to do)
-        if(_plannedMoves.Count > 0 && !_plannedMoves[_plannedMoves.Count -1].Double &&
-            _plannedMoves[_plannedMoves.Count -1].Face == face && _plannedMoves[_plannedMoves.Count -1].Prime == prime) {
-            
+        var newMove = new FaceMove(){Face = face, Prime = prime, Remaining = alreadyDouble ? 180f : 90f,
+                Double = alreadyDouble, Shuffle = shuffle, Hidden = hidden, Log = log};
+        
+        if(GeneralSettings.NoDoubleMove) {
+            _plannedMoves.Add(newMove);
+            return;
+        }
+
+        // Doubling a planned move
+        if(!alreadyDouble && _plannedMoves.Count > 0 && !_plannedMoves[_plannedMoves.Count -1].Double &&
+        _plannedMoves[_plannedMoves.Count -1].Face == face && _plannedMoves[_plannedMoves.Count -1].Prime == prime) {
+
             var move = _plannedMoves[_plannedMoves.Count -1];
             move.Remaining += 90f;
             move.Double = true;
             _plannedMoves[_plannedMoves.Count -1] = move;
 
+        }
+        // doubling the ongoing move
+        else if(!alreadyDouble && _plannedMoves.Count == 0 && _currentMove.Remaining > 0 && !_currentMove.Double &&
+        _currentMove.Face == face && _currentMove.Prime == prime){
+
+            _currentMove.Remaining += 90f;
+            _currentMove.Double = true;
+
             // same move but on a currently happening move, so we need to process it once more
-            if(_plannedMoves.Count == 1) {
-                ProcessQuarterMove(move);
-                if(move.Shuffle && move.Log){
-                    var tempMove = _shuffleMoves.Pop();
-                    tempMove.Double = true;
-                    tempMove.Remaining = 180f;
-                    _shuffleMoves.Push(tempMove);
-                }
-                else if(move.Log){
-                    var tempMove = _previousMoves.Pop();
-                    tempMove.Double = true;
-                    tempMove.Remaining = 180f;
-                    _previousMoves.Push(tempMove);
-                }
-            } 
+            ProcessQuarterMove(_currentMove);
+            if(_currentMove.Shuffle && _currentMove.Log){
+                var tempMove = _shuffleMoves.Pop();
+                tempMove.Double = true;
+                tempMove.Remaining = 180f;
+                _shuffleMoves.Push(tempMove);
+            }
+            else if(_currentMove.Log){
+                var tempMove = _previousMoves.Pop();
+                tempMove.Double = true;
+                tempMove.Remaining = 180f;
+                _previousMoves.Push(tempMove);
+            }
+
         }
-        // // move inverse so we can remove (only if it's not the ongoing current move as we want to avoid mid - rotation bugs)
-        // else if(_plannedMoves.Count > 1 && _plannedMoves[_plannedMoves.Count -1].Face == face && _plannedMoves[_plannedMoves.Count -1].Prime != prime) {
-        //     _plannedMoves.RemoveAt(_plannedMoves.Count -1);
-        // }
-        // // normal move
+        // normal move
         else {
-            _plannedMoves.Add(new FaceMove(){Face = face, Prime = prime, Remaining = alreadyDouble ? 180f : 90f, Double = alreadyDouble, Shuffle = shuffle, Hidden = hidden, Log = log});
+            _plannedMoves.Add(newMove);
         }
+
+
+
     }
 
     public void ReverseAll() {
@@ -298,25 +311,21 @@ public class RubiksCube : MonoBehaviour
 
     private void Update() {
 
-        if(_plannedMoves.Count > 0 && _plannedMoves[0].Remaining > 0) {
+        if(_currentMove.Remaining > 0) {
 
+            if((!_currentMove.Double && _currentMove.Remaining == 90f )|| (_currentMove.Double && _currentMove.Remaining == 180f)) NewMoveStarted(_currentMove);
 
-            var move = _plannedMoves[0];
-
-            if((!move.Double && move.Remaining == 90f )|| (move.Double && move.Remaining == 180f)) NewMoveStarted(move);
-
-            var cubeIndexes = GetPhysicalFaceCubeIndexes(move.Face);
-            var rotationAxis = GetRotationAxis(move);
+            var cubeIndexes = GetPhysicalFaceCubeIndexes(_currentMove.Face);
+            var rotationAxis = GetRotationAxis(_currentMove);
             var worldAxis = transform.TransformDirection(rotationAxis);
 
-            var rotation = Mathf.Lerp(0, move.Remaining + _rotationLerpOffset, _rotationSpeed * Time.deltaTime);
+            var rotation = Mathf.Lerp(0, _currentMove.Remaining + _rotationLerpOffset, _rotationSpeed * Time.deltaTime);
 
-            if(rotation < _rotationThreashold || rotation > move.Remaining) {
-                rotation = move.Remaining;
+            if(rotation < _rotationThreashold || rotation > _currentMove.Remaining) {
+                rotation = _currentMove.Remaining;
             }
 
-            move.Remaining -= rotation;
-            _plannedMoves[0] = move;
+            _currentMove.Remaining -= rotation;
 
             foreach (var i in cubeIndexes)
             {
@@ -325,7 +334,8 @@ public class RubiksCube : MonoBehaviour
             }
         }
 
-        if(_plannedMoves.Count > 0 && _plannedMoves[0].Remaining == 0) {
+        if(_plannedMoves.Count > 0 && _currentMove.Remaining == 0) {
+            _currentMove = _plannedMoves[0];
             _plannedMoves.RemoveAt(0);
         }
     }
@@ -340,12 +350,6 @@ public class RubiksCube : MonoBehaviour
 
         _shuffleMoves.Clear();
     }
-
-
-    // a double move should have a slightly different sound and a faster animation (than two seperate move)
-    // we need to properly process double moves
-    // if a new move is the same as the last move we change the last move to be a double move
-    // if 
 
 
     private void NewMoveStarted(FaceMove move) {
