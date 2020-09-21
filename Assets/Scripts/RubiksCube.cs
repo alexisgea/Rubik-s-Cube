@@ -6,6 +6,8 @@ using UnityEngine;
 // IDEAS - TODOS
 //
 
+// -> generate random string of 20 move as shuffle and use it
+
 // add a leaderboard and timers
 // add gold star for current record and grey start for past record
 
@@ -27,9 +29,9 @@ using UnityEngine;
 
 // add controller support with vibration
 
-
-// NOTE
-// get shuffle as string and process it
+// track time per solve step
+// track own best time and make difference with it
+// enable ability to start timer during casula stuff
 
 
 // LEADERBOARD CONCEPT

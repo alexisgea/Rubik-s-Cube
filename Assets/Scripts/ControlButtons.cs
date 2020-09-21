@@ -6,11 +6,6 @@ using System.Linq;
 using System.Text;
 
 
-// more notes
-// track time per solve step
-// track own best time and make difference with it
-// enable ability to start timer during casula stuff
-
 
 public enum ControlPhase {Idle, Suffling, Prepping, Solving, Solved}
 public class ControlButtons : MonoBehaviour
